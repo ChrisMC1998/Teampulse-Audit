@@ -1,0 +1,1762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>TeamPulse</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080C17;--card:#0F1525;--card2:#131929;--bdr:rgba(99,102,241,.18);--acc:#6366f1;--acc2:#818cf8;--glow:rgba(99,102,241,.25);--ok:#34d399;--bad:#f87171;--warn:#fbbf24;--txt:#e2e8f0;--mut:#64748b}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--acc);border-radius:4px}
+#auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 20% 50%,rgba(99,102,241,.12) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(129,140,248,.08) 0%,transparent 50%),var(--bg)}
+.auth-card{background:var(--card);border:1px solid var(--bdr);border-radius:20px;padding:40px;width:420px;max-width:95vw;box-shadow:0 0 60px rgba(99,102,241,.1)}
+.logo-text{font-family:'Space Mono',monospace;font-size:1.6rem;font-weight:700}.logo-text span{color:var(--acc2)}
+.tp-input{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(99,102,241,.2);border-radius:10px;padding:10px 14px;color:var(--txt);font-family:'DM Sans',sans-serif;font-size:.9rem;transition:border-color .2s;outline:none}
+.tp-input:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(99,102,241,.15)}.tp-input option{background:#1e293b}
+.tp-btn{width:100%;background:var(--acc);color:#fff;border:none;border-radius:10px;padding:11px;font-family:'DM Sans',sans-serif;font-size:.95rem;font-weight:600;cursor:pointer;transition:all .2s}
+.tp-btn:hover{background:var(--acc2);box-shadow:0 0 20px rgba(99,102,241,.4);transform:translateY(-1px)}.tp-btn:active{transform:none}
+.tp-btn-outline{background:transparent;border:1px solid var(--bdr);color:var(--acc2)}.tp-btn-outline:hover{background:rgba(99,102,241,.1);box-shadow:none;transform:none}
+.tp-btn-sm{width:auto;padding:5px 12px;font-size:.78rem;border-radius:7px}
+.tp-btn-danger{background:rgba(248,113,113,.15);color:var(--bad);border:1px solid rgba(248,113,113,.3)}.tp-btn-danger:hover{background:rgba(248,113,113,.3);transform:none}
+#auth-screen{display:flex}
+#app{display:none;min-height:100vh}
+.sidebar{width:220px;min-height:100vh;background:var(--card);border-right:1px solid var(--bdr);position:fixed;top:0;left:0;display:flex;flex-direction:column;padding:24px 16px;z-index:100;overflow-y:auto}
+.main-content{margin-left:220px;min-height:100vh;padding:24px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;font-size:.88rem;color:var(--mut);transition:all .2s;margin-bottom:4px}
+.nav-item:hover,.nav-item.active{background:rgba(99,102,241,.15);color:var(--acc2)}.nav-item.active{border-left:3px solid var(--acc)}
+.stat-card{background:var(--card);border:1px solid var(--bdr);border-radius:14px;padding:20px;transition:box-shadow .2s}.stat-card:hover{box-shadow:0 0 20px var(--glow)}
+.topbar{background:var(--card);border:1px solid var(--bdr);border-radius:14px;padding:12px 20px;margin-bottom:24px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.f-sel{background:rgba(255,255,255,.04);border:1px solid rgba(99,102,241,.2);border-radius:8px;padding:6px 12px;color:var(--txt);font-family:'DM Sans',sans-serif;font-size:.82rem;cursor:pointer;outline:none}
+.f-sel option{background:#1e293b}
+.tp-table{width:100%;border-collapse:collapse;font-size:.84rem}
+.tp-table th{background:rgba(99,102,241,.12);padding:10px 14px;text-align:left;color:var(--acc2);font-weight:600;border-bottom:1px solid var(--bdr)}
+.tp-table td{padding:9px 14px;border-bottom:1px solid rgba(99,102,241,.07)}.tp-table tr:hover td{background:rgba(99,102,241,.05)}
+.badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.74rem;font-weight:600}
+.badge-pass{background:rgba(52,211,153,.15);color:var(--ok)}.badge-fail{background:rgba(248,113,113,.15);color:var(--bad)}
+.panel{background:var(--card);border:1px solid var(--bdr);border-radius:14px;padding:24px}
+.glow-line{height:2px;background:linear-gradient(90deg,transparent,var(--acc),var(--acc2),transparent);border-radius:2px;margin:16px 0}
+.cw{position:relative;height:200px}.cwl{position:relative;height:260px}
+.sc-cat{font-size:.71rem;font-weight:700;color:var(--acc2);text-transform:uppercase;letter-spacing:.06em;padding:6px 0 2px;border-bottom:1px solid rgba(99,102,241,.12);margin-bottom:6px;margin-top:10px}
+.sc-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 0}
+.sc-par{font-size:.8rem;flex:1}.sc-rng{font-size:.7rem;color:var(--mut);margin-right:6px;white-space:nowrap}
+.sb{padding:3px 8px;border-radius:5px;cursor:pointer;font-size:.75rem;font-weight:600;border:1px solid transparent;transition:all .12s;background:rgba(255,255,255,.05);color:var(--mut)}
+.sb:hover{background:rgba(99,102,241,.2);color:var(--acc2)}
+.sb.sY{background:rgba(52,211,153,.2);color:var(--ok);border-color:var(--ok)}
+.sb.sN{background:rgba(248,113,113,.2);color:var(--bad);border-color:var(--bad)}
+.sb.sA{background:rgba(100,116,139,.3);color:#94a3b8;border-color:#475569}
+.sb.sF{background:rgba(251,63,30,.25);color:#ff6b47;border-color:#ff6b47}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--card);border:1px solid var(--bdr);border-radius:10px;padding:12px 22px;font-size:.875rem;box-shadow:0 10px 30px rgba(0,0,0,.5);opacity:0;transition:all .3s;z-index:9999;white-space:nowrap}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.page{display:none;animation:fi .3s}.page.active{display:block}
+@keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+label.tp-label{font-size:.8rem;color:var(--mut);margin-bottom:4px;display:block}
+.sum-top{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.sum-card{background:var(--card2);border:1px solid var(--bdr);border-radius:12px;padding:16px;text-align:center}
+.admin-badge{background:rgba(248,113,113,.15);color:var(--bad);border:1px solid rgba(248,113,113,.3);border-radius:6px;padding:2px 8px;font-size:.7rem;font-weight:700}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:5000;display:flex;align-items:center;justify-content:center}
+.modal{background:var(--card);border:1px solid var(--bdr);border-radius:16px;padding:28px;width:500px;max-width:95vw;max-height:90vh;overflow-y:auto}
+.heatmap-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:12px}
+.hm-day-label{text-align:center;font-size:.72rem;color:var(--mut);padding:4px 0;font-weight:600}
+.hm-cell{aspect-ratio:1;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:600;cursor:default;transition:transform .15s;position:relative}
+.hm-cell:hover{transform:scale(1.05);z-index:10}
+.hm-cell.empty{background:transparent}
+.hm-cell.audited{background:rgba(52,211,153,.65);color:#fff}
+.hm-cell.not-audited{background:rgba(248,113,113,.35);color:rgba(248,113,113,.8)}
+.hm-cell.today{outline:2px solid var(--acc2);outline-offset:1px}
+.hm-cell.future{background:rgba(255,255,255,.03);color:var(--mut)}
+.hm-cell.weekend{background:rgba(255,255,255,.02);color:rgba(100,116,139,.4)}
+.upload-area{border:2px dashed rgba(99,102,241,.3);border-radius:12px;padding:28px;text-align:center;cursor:pointer;transition:all .2s}.upload-area:hover{border-color:var(--acc);background:rgba(99,102,241,.05)}
+/* Chatbot */
+#chat-fab{position:fixed;bottom:28px;right:28px;width:52px;height:52px;background:linear-gradient(135deg,var(--acc),var(--acc2));border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 24px rgba(99,102,241,.5);z-index:8000;font-size:1.4rem;border:none;user-select:none;transition:box-shadow .2s}
+#chat-fab:hover{box-shadow:0 6px 32px rgba(99,102,241,.7)}
+#chat-win{position:fixed;bottom:92px;right:28px;width:360px;background:var(--card);border:1px solid var(--bdr);border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.5);z-index:7999;display:none;flex-direction:column;overflow:hidden}
+#chat-win.open{display:flex;animation:fi .25s}
+.chat-hdr{padding:14px 18px;background:linear-gradient(90deg,rgba(99,102,241,.2),rgba(129,140,248,.1));border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;cursor:move;user-select:none;flex-shrink:0}
+.chat-hdr-ttl{font-weight:700;font-size:.9rem;color:var(--acc2);display:flex;align-items:center;gap:8px}
+#chat-msgs{overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;height:220px;flex-shrink:0}
+.cmsg{max-width:88%;padding:9px 13px;border-radius:12px;font-size:.82rem;line-height:1.5;white-space:pre-wrap}
+.cmsg.user{background:rgba(99,102,241,.25);align-self:flex-end;border-bottom-right-radius:3px}
+.cmsg.ai{background:rgba(255,255,255,.05);align-self:flex-start;border-bottom-left-radius:3px;border:1px solid var(--bdr)}
+.cmsg.thinking{color:var(--mut);font-style:italic}
+.chat-quick{display:flex;flex-wrap:wrap;gap:5px;padding:8px 14px;flex-shrink:0;border-top:1px solid rgba(99,102,241,.08)}
+.chat-inp-row{display:flex;gap:8px;padding:10px 14px;background:var(--card2);flex-shrink:0}
+#chat-inp{flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(99,102,241,.2);border-radius:8px;padding:8px 12px;color:var(--txt);font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;resize:none;height:36px}
+#chat-inp:focus{border-color:var(--acc)}
+#chat-send{background:var(--acc);border:none;border-radius:8px;width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1rem;flex-shrink:0;transition:background .2s}
+#chat-send:hover{background:var(--acc2)}
+.cqb{background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.25);color:var(--acc2);border-radius:20px;padding:3px 10px;font-size:.72rem;cursor:pointer}
+.cqb:hover{background:rgba(99,102,241,.25)}
+/* Multi-select */
+.ms-wrap{position:relative;display:inline-block}
+.ms-btn{background:rgba(255,255,255,.04);border:1px solid rgba(99,102,241,.2);border-radius:8px;padding:6px 28px 6px 12px;color:var(--txt);font-family:'DM Sans',sans-serif;font-size:.82rem;cursor:pointer;outline:none;min-width:130px;text-align:left;position:relative;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ms-btn::after{content:'▾';position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:.7rem;color:var(--mut)}
+.ms-dropdown{position:absolute;top:calc(100% + 4px);left:0;min-width:180px;max-width:240px;background:var(--card);border:1px solid var(--bdr);border-radius:10px;z-index:3000;box-shadow:0 8px 32px rgba(0,0,0,.4);display:none;flex-direction:column;overflow:hidden}
+.ms-dropdown.open{display:flex}
+.ms-search{padding:8px 12px;border-bottom:1px solid var(--bdr)}
+.ms-search input{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(99,102,241,.2);border-radius:6px;padding:5px 10px;color:var(--txt);font-size:.78rem;outline:none}
+.ms-list{max-height:200px;overflow-y:auto;padding:4px 0}
+.ms-item{display:flex;align-items:center;gap:8px;padding:6px 12px;cursor:pointer;font-size:.8rem;transition:background .15s}
+.ms-item:hover{background:rgba(99,102,241,.12)}
+.ms-item input[type=checkbox]{accent-color:var(--acc);cursor:pointer}
+.ms-footer{padding:6px 12px;border-top:1px solid var(--bdr);display:flex;gap:6px}
+.ms-footer button{flex:1;padding:4px;border-radius:5px;font-size:.72rem;cursor:pointer;border:none}
+.ms-sel-all{background:rgba(99,102,241,.2);color:var(--acc2)}
+.ms-clear{background:rgba(248,113,113,.15);color:var(--bad)}
+/* Profile */
+#profile-btn{background:rgba(99,102,241,.15);border:1px solid var(--bdr);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.85rem;margin-left:auto;margin-bottom:8px;overflow:hidden;transition:box-shadow .2s}
+#profile-btn:hover{box-shadow:0 0 0 2px var(--acc)}
+/* Quarterly Top Performers */
+.qtp-section{background:var(--card);border:1px solid var(--bdr);border-radius:14px;padding:24px;margin-bottom:18px}
+.qtp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}
+.qtp-col{background:var(--card2);border:1px solid var(--bdr);border-radius:12px;padding:14px;overflow:hidden}
+.qtp-col-hdr{font-size:.8rem;font-weight:700;color:var(--acc2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.qtp-medal{font-size:.78rem;font-weight:600;color:var(--txt);padding:5px 0;display:flex;align-items:center;gap:7px;border-bottom:1px solid rgba(99,102,241,.07)}
+.qtp-medal:last-child{border-bottom:none}
+.qtp-medal-rank{font-size:.9rem;flex-shrink:0;width:22px;text-align:center}
+.qtp-medal-name{flex:1;font-size:.75rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qtp-medal-score{font-size:.73rem;font-weight:700;flex-shrink:0}
+.qtp-divider{width:100%;height:1px;background:rgba(99,102,241,.12);margin:10px 0}
+.qtp-sub-label{font-size:.68rem;color:var(--mut);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.lb-alerts-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
+/* FE User chart scroll — SPEC: overflow-x auto, no compression */
+.fe-chart-scroll-outer{overflow-x:auto;overflow-y:hidden;width:100%;padding-bottom:8px}
+.fe-chart-scroll-outer::-webkit-scrollbar{height:6px}
+.fe-chart-scroll-outer::-webkit-scrollbar-track{background:rgba(255,255,255,.03);border-radius:3px}
+.fe-chart-scroll-outer::-webkit-scrollbar-thumb{background:rgba(99,102,241,.5);border-radius:3px}
+.fe-filter-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.fe-team-filter{background:rgba(255,255,255,.04);border:1px solid rgba(99,102,241,.2);border-radius:8px;padding:5px 12px;color:var(--txt);font-family:'DM Sans',sans-serif;font-size:.8rem;cursor:pointer;outline:none;min-width:140px}
+.fe-team-filter option{background:#1e293b}
+/* Drag & drop */
+.draggable-card{cursor:grab;user-select:none}
+.dash-card-wrapper.sortable-ghost{opacity:.35;border:2px dashed var(--acc);border-radius:14px;background:rgba(99,102,241,.05)!important}
+.dash-card-wrapper.sortable-chosen{box-shadow:0 12px 40px rgba(99,102,241,.35)}
+.drag-handle{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.2);border-radius:6px;font-size:.7rem;color:var(--acc2);cursor:grab;margin-left:8px;opacity:.6;transition:opacity .15s;user-select:none}
+.drag-handle:hover{opacity:1;background:rgba(99,102,241,.2)}
+#dash-sortable-container{display:flex;flex-direction:column;gap:18px}
+.dash-card-wrapper{position:relative}
+
+/* ═══════════════════════════════════════════════════════
+   SIDEBAR INSIGHTS PANEL — Spec: below profile, above sign out
+   ═══════════════════════════════════════════════════════ */
+#sidebar-insights{
+  margin-top:16px;
+  border-top:1px solid var(--bdr);
+  padding-top:14px;
+}
+.si-title{
+  font-size:.7rem;font-weight:700;color:var(--acc2);
+  text-transform:uppercase;letter-spacing:.06em;
+  margin-bottom:10px;
+  display:flex;align-items:center;gap:5px;
+}
+.si-row{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  padding:5px 0;border-bottom:1px solid rgba(99,102,241,.07);
+  gap:6px;
+}
+.si-row:last-child{border-bottom:none}
+.si-label{font-size:.68rem;color:var(--mut);flex-shrink:0;line-height:1.3;max-width:72px}
+.si-value{font-size:.72rem;font-weight:700;text-align:right;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px}
+.si-pos{color:var(--ok)}
+.si-neg{color:var(--bad)}
+.si-neu{color:var(--txt)}
+.si-warn{color:var(--warn)}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+
+<!-- AUTH -->
+<div id="auth-screen">
+<div class="auth-card">
+  <div class="text-center mb-6">
+    <div class="logo-text">Team<span>Pulse</span></div>
+    <p style="color:var(--mut);font-size:.82rem;margin-top:4px">Workforce Performance Intelligence</p>
+  </div>
+  <div class="glow-line"></div>
+  <div id="login-form">
+    <h2 style="font-size:1.1rem;font-weight:600;margin-bottom:16px">Sign In</h2>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div><label class="tp-label">Email</label><input id="li-email" class="tp-input" type="email" placeholder="you@company.com"/></div>
+      <div><label class="tp-label">Password</label><input id="li-pass" class="tp-input" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')handleLogin()"/></div>
+      <button class="tp-btn" onclick="handleLogin()">Sign In</button>
+      <button class="tp-btn tp-btn-outline" onclick="toggleAuth()">Create Account →</button>
+    </div>
+  </div>
+  <div id="signup-form" style="display:none">
+    <h2 style="font-size:1.1rem;font-weight:600;margin-bottom:16px">Create Account</h2>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div><label class="tp-label">Full Name</label><input id="su-name" class="tp-input" type="text" placeholder="Chris Mcguinness"/></div>
+      <div><label class="tp-label">Email</label><input id="su-email" class="tp-input" type="email" placeholder="you@company.com"/></div>
+      <div><label class="tp-label">Password</label><input id="su-pass" class="tp-input" type="password" placeholder="Min 6 chars"/></div>
+      <div><label class="tp-label">Role</label>
+        <select id="su-role" class="tp-input"><option value="LEAD">LEAD</option><option value="SME">SME</option><option value="MANAGER">MANAGER</option></select></div>
+      <button class="tp-btn" onclick="handleSignup()">Create Account</button>
+      <button class="tp-btn tp-btn-outline" onclick="toggleAuth()">← Back</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- APP -->
+<div id="app">
+<div class="sidebar">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+    <div class="logo-text" style="font-size:1.2rem;padding:0 4px">Team<span>Pulse</span></div>
+    <div id="profile-btn" onclick="showPage('profile',null)" title="Profile">👤</div>
+  </div>
+  <p style="font-size:.72rem;color:var(--mut);padding:0 4px;margin-bottom:2px" id="w-name"></p>
+  <p style="font-size:.68rem;color:var(--acc2);padding:0 4px;margin-bottom:14px" id="w-role"></p>
+  <div class="glow-line" style="margin:0 0 14px 0"></div>
+  <nav>
+    <div class="nav-item active" onclick="showPage('dashboard',this)">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dashboard
+    </div>
+    <div class="nav-item" onclick="showPage('employees',this)">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Employees
+    </div>
+    <div class="nav-item" onclick="showPage('audit',this)">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Audit Panel
+    </div>
+    <div class="nav-item" onclick="showPage('summary',this)">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Audit Summary
+    </div>
+    <div class="nav-item" id="admin-nav" style="display:none" onclick="showPage('admin',this)">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Admin <span class="admin-badge" style="margin-left:4px">ADMIN</span>
+    </div>
+    <div class="nav-item" onclick="showPage('profile',this)">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Profile
+    </div>
+  </nav>
+
+  <!-- ═══ SIDEBAR INSIGHTS PANEL ═══ -->
+  <div id="sidebar-insights">
+    <div class="si-title">⚡ Quick Insights</div>
+    <div id="si-body">
+      <div style="font-size:.72rem;color:var(--mut);padding:4px 0">No data yet</div>
+    </div>
+  </div>
+
+  <div style="margin-top:auto;padding-top:16px">
+    <button class="tp-btn tp-btn-outline" style="font-size:.8rem;padding:8px" onclick="handleLogout()">Sign Out</button>
+  </div>
+</div>
+
+<div class="main-content">
+  <!-- Topbar -->
+  <div class="topbar" id="topbar">
+    <span style="font-size:.85rem;font-weight:600;color:var(--acc2);margin-right:4px">Filters:</span>
+    <select class="f-sel" id="f-year" onchange="applyFilters()" style="min-width:80px">
+      <option value="">All Years</option>
+    </select>
+    <div class="ms-wrap" id="ms-month-wrap">
+      <button class="ms-btn" id="ms-month-btn" onclick="toggleMs('month')">All Months</button>
+      <div class="ms-dropdown" id="ms-month-dd">
+        <div class="ms-search"><input type="text" placeholder="Search…" oninput="filterMsOpts(this,'month')"/></div>
+        <div class="ms-list" id="ms-month-list"></div>
+        <div class="ms-footer"><button class="ms-sel-all" onclick="msSelAll('month')">All</button><button class="ms-clear" onclick="msClear('month')">Clear</button></div>
+      </div>
+    </div>
+    <div class="ms-wrap" id="ms-team-wrap">
+      <button class="ms-btn" id="ms-team-btn" onclick="toggleMs('team')">All Teams</button>
+      <div class="ms-dropdown" id="ms-team-dd">
+        <div class="ms-search"><input type="text" placeholder="Search…" oninput="filterMsOpts(this,'team')"/></div>
+        <div class="ms-list" id="ms-team-list"></div>
+        <div class="ms-footer"><button class="ms-sel-all" onclick="msSelAll('team')">All</button><button class="ms-clear" onclick="msClear('team')">Clear</button></div>
+      </div>
+    </div>
+    <div class="ms-wrap" id="ms-emp-wrap">
+      <button class="ms-btn" id="ms-emp-btn" onclick="toggleMs('emp')">All Employees</button>
+      <div class="ms-dropdown" id="ms-emp-dd">
+        <div class="ms-search"><input type="text" placeholder="Search…" oninput="filterMsOpts(this,'emp')"/></div>
+        <div class="ms-list" id="ms-emp-list"></div>
+        <div class="ms-footer"><button class="ms-sel-all" onclick="msSelAll('emp')">All</button><button class="ms-clear" onclick="msClear('emp')">Clear</button></div>
+      </div>
+    </div>
+    <div class="ms-wrap" id="ms-sup-wrap">
+      <button class="ms-btn" id="ms-sup-btn" onclick="toggleMs('sup')">All Supervisors</button>
+      <div class="ms-dropdown" id="ms-sup-dd">
+        <div class="ms-search"><input type="text" placeholder="Search…" oninput="filterMsOpts(this,'sup')"/></div>
+        <div class="ms-list" id="ms-sup-list"></div>
+        <div class="ms-footer"><button class="ms-sel-all" onclick="msSelAll('sup')">All</button><button class="ms-clear" onclick="msClear('sup')">Clear</button></div>
+      </div>
+    </div>
+    <div class="ms-wrap" id="ms-sme-wrap">
+      <button class="ms-btn" id="ms-sme-btn" onclick="toggleMs('sme')">All SMEs</button>
+      <div class="ms-dropdown" id="ms-sme-dd">
+        <div class="ms-search"><input type="text" placeholder="Search…" oninput="filterMsOpts(this,'sme')"/></div>
+        <div class="ms-list" id="ms-sme-list"></div>
+        <div class="ms-footer"><button class="ms-sel-all" onclick="msSelAll('sme')">All</button><button class="ms-clear" onclick="msClear('sme')">Clear</button></div>
+      </div>
+    </div>
+    <button class="tp-btn tp-btn-outline tp-btn-sm" onclick="exportCSV()">⬇ Export CSV</button>
+    <div style="margin-left:auto;font-size:.78rem;color:var(--mut)" id="tb-date"></div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="page-dashboard" class="page active">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div><h1 style="font-size:1.4rem;font-weight:700;margin-bottom:4px">Audit Dashboard Overview</h1>
+        <p style="color:var(--mut);font-size:.82rem">Real-time audit performance metrics</p></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span style="font-size:.72rem;color:var(--mut)">⠿ Drag cards to rearrange</span>
+        <button class="tp-btn tp-btn-outline tp-btn-sm" id="demo-btn" onclick="generateDemo()">⚡ Generate Demo Data</button>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px">
+      <div class="stat-card"><div style="display:flex;justify-content:space-between;align-items:start"><div><p style="color:var(--mut);font-size:.74rem;margin-bottom:6px">Total Audits</p><p id="s-total" style="font-size:2rem;font-weight:700;color:var(--acc2)">0</p></div><span style="background:rgba(99,102,241,.15);padding:8px;border-radius:10px">📋</span></div></div>
+      <div class="stat-card"><div style="display:flex;justify-content:space-between;align-items:start"><div><p style="color:var(--mut);font-size:.74rem;margin-bottom:6px">Avg Quality %</p><p id="s-avg" style="font-size:2rem;font-weight:700;color:var(--ok)">0%</p></div><span style="background:rgba(52,211,153,.12);padding:8px;border-radius:10px">📊</span></div></div>
+      <div class="stat-card"><div style="display:flex;justify-content:space-between;align-items:start"><div><p style="color:var(--mut);font-size:.74rem;margin-bottom:6px">Pass Rate</p><p id="s-pass" style="font-size:2rem;font-weight:700;color:var(--ok)">0%</p></div><span style="background:rgba(52,211,153,.12);padding:8px;border-radius:10px">✅</span></div></div>
+      <div class="stat-card"><div style="display:flex;justify-content:space-between;align-items:start"><div><p style="color:var(--mut);font-size:.74rem;margin-bottom:6px">Fail / Fatal</p><p id="s-fail" style="font-size:2rem;font-weight:700;color:var(--bad)">0%</p></div><span style="background:rgba(248,113,113,.12);padding:8px;border-radius:10px">❌</span></div></div>
+    </div>
+
+    <div id="dash-sortable-container">
+      <div class="dash-card-wrapper" data-card-id="wow">
+        <div class="panel">
+          <div style="display:flex;align-items:center;margin-bottom:4px">
+            <h2 style="font-size:.9rem;font-weight:600">📅 Week-on-Week Quality Performance</h2>
+            <span class="drag-handle">⠿ drag</span>
+          </div>
+          <p style="color:var(--mut);font-size:.72rem;margin-bottom:12px">Weekly avg quality % with trend line overlay</p>
+          <div style="position:relative;height:240px"><canvas id="ch-wow"></canvas></div>
+        </div>
+      </div>
+
+      <div class="dash-card-wrapper" data-card-id="trend-donut">
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px">
+          <div class="panel"><h2 style="font-size:.9rem;font-weight:600;margin-bottom:12px">📅 Quality Trend by Month (Avg %)</h2><div class="cwl"><canvas id="ch-trend"></canvas></div></div>
+          <div class="panel"><h2 style="font-size:.9rem;font-weight:600;margin-bottom:12px">🍩 Pass / Fail / Fatal Split</h2><div class="cwl" style="height:240px"><canvas id="ch-donut"></canvas></div></div>
+        </div>
+      </div>
+
+      <div class="dash-card-wrapper" data-card-id="agents-teams">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div class="panel"><h2 style="font-size:.9rem;font-weight:600;margin-bottom:12px">📈 Avg Score — Top 10 Agents</h2><div class="cwl"><canvas id="ch-agent"></canvas></div></div>
+          <div class="panel"><h2 style="font-size:.9rem;font-weight:600;margin-bottom:12px">🏢 Avg Quality % by Team</h2><div class="cwl"><canvas id="ch-team"></canvas></div></div>
+        </div>
+      </div>
+
+      <div class="dash-card-wrapper" data-card-id="radar-feuser">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div class="panel"><h2 style="font-size:.9rem;font-weight:600;margin-bottom:4px">🕸 Pod vs Pod Radar</h2><p style="color:var(--mut);font-size:.72rem;margin-bottom:10px">Quality% · Pass% · Fail% · Fatal%</p><div class="cwl"><canvas id="ch-radar"></canvas></div></div>
+          <!-- FE User vs FE User — SPEC: destroy+recreate, dynamic width, scroll -->
+          <div class="panel" style="overflow:hidden">
+            <h2 style="font-size:.9rem;font-weight:600;margin-bottom:4px">📊 FE User vs FE User</h2>
+            <p style="color:var(--mut);font-size:.72rem;margin-bottom:8px">Quality% · Pass% · Fail% · Fatal% per FE User</p>
+            <div class="fe-filter-row">
+              <span style="font-size:.75rem;color:var(--mut);white-space:nowrap">Filter by team:</span>
+              <select class="fe-team-filter" id="fe-team-filter" onchange="onFETeamFilterChange()">
+                <option value="">All Teams</option>
+              </select>
+              <span id="fe-user-count" style="font-size:.72rem;color:var(--mut);margin-left:auto"></span>
+            </div>
+            <div class="fe-chart-scroll-outer">
+              <div id="ch-podbar-wrap" style="position:relative;height:300px;min-width:600px">
+                <canvas id="ch-podbar"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dash-card-wrapper" data-card-id="heatmap">
+        <div class="panel">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div>
+                <h2 style="font-size:.9rem;font-weight:600">🗓 Audit Activity Heatmap</h2>
+                <p style="color:var(--mut);font-size:.74rem" id="hm-subtitle">Days audits were submitted this month</p>
+              </div>
+              <span class="drag-handle">⠿ drag</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <select class="f-sel" id="hm-month" onchange="renderHeatmap()" style="font-size:.76rem"></select>
+              <span id="hm-elapsed-text" style="font-size:.72rem;color:var(--mut);white-space:nowrap"></span>
+            </div>
+          </div>
+          <div id="hm-legend" style="display:flex;gap:16px;margin-bottom:10px;font-size:.72rem;color:var(--mut)">
+            <span><span style="display:inline-block;width:10px;height:10px;background:rgba(52,211,153,.65);border-radius:2px;margin-right:4px"></span>Audits done</span>
+            <span><span style="display:inline-block;width:10px;height:10px;background:rgba(248,113,113,.35);border-radius:2px;margin-right:4px"></span>No audits</span>
+            <span><span style="display:inline-block;width:10px;height:10px;background:rgba(255,255,255,.03);border-radius:2px;margin-right:4px"></span>Future/Weekend</span>
+          </div>
+          <div class="heatmap-grid" id="hm-day-labels"></div>
+          <div class="heatmap-grid" id="hm-grid"></div>
+        </div>
+      </div>
+
+      <!-- Call Criteria by POD — SPEC: barThickness 10-12, categoryPercentage 0.45, barPercentage 0.5 -->
+      <div class="dash-card-wrapper" data-card-id="call-criteria">
+        <div class="panel">
+          <div style="display:flex;align-items:center;margin-bottom:4px">
+            <h2 style="font-size:.9rem;font-weight:600">📊 Call Criteria by POD</h2>
+            <span class="drag-handle">⠿ drag</span>
+          </div>
+          <p style="color:var(--mut);font-size:.72rem;margin-bottom:10px">Avg % per category across PODs: Call Execution · Location/Records · Documentation · Progress</p>
+          <div id="ch-call-criteria-wrap" style="height:320px;overflow-x:auto;overflow-y:hidden">
+            <div id="ch-call-criteria-inner" style="height:100%;min-width:100%">
+              <canvas id="ch-call-criteria"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dash-card-wrapper" data-card-id="lb-alerts">
+        <div class="lb-alerts-row" style="margin-bottom:0">
+          <div class="panel"><h2 style="font-size:1rem;font-weight:600;margin-bottom:14px">🏆 Leaderboard</h2><div id="lb-body"><p style="color:var(--mut);font-size:.82rem">No data yet</p></div></div>
+          <div class="panel">
+            <h2 style="font-size:1rem;font-weight:600;margin-bottom:14px">⚠️ Alerts <span style="font-size:.74rem;color:var(--mut);font-weight:400">(avg &lt; 85%)</span></h2>
+            <div id="al-body"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dash-card-wrapper" data-card-id="quarterly">
+        <div class="qtp-section" id="qtp-section" style="margin-bottom:0">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;flex-wrap:wrap;gap:8px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div>
+                <h2 style="font-size:1rem;font-weight:600">🏆 Quarterly Top Performers</h2>
+                <p style="color:var(--mut);font-size:.74rem;margin-top:2px">Ranked by Avg Quality % · Updates with active filters</p>
+              </div>
+              <span class="drag-handle">⠿ drag</span>
+            </div>
+            <div id="qtp-range-note" style="font-size:.72rem;color:var(--mut)"></div>
+          </div>
+          <div class="qtp-grid" id="qtp-grid">
+            <div style="color:var(--mut);font-size:.82rem;grid-column:1/-1;padding:20px 0;text-align:center">No audit data yet</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dash-card-wrapper" data-card-id="recent-audits">
+        <div class="panel">
+          <h2 style="font-size:1rem;font-weight:600;margin-bottom:16px">Recent Audits</h2>
+          <div style="overflow-x:auto">
+            <table class="tp-table"><thead><tr><th>Agent</th><th>Team</th><th>Order ID</th><th>Score</th><th>Status</th><th>Audited By</th><th>Date</th></tr></thead>
+            <tbody id="dash-tbl"></tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EMPLOYEES -->
+  <div id="page-employees" class="page">
+    <h1 style="font-size:1.4rem;font-weight:700;margin-bottom:6px">Employees</h1>
+    <p style="color:var(--mut);font-size:.82rem;margin-bottom:18px">Employee database</p>
+    <div class="panel" style="margin-bottom:18px">
+      <h2 style="font-size:1rem;font-weight:600;margin-bottom:10px">📂 Import / Update Employee Records</h2>
+      <p style="color:var(--mut);font-size:.8rem;margin-bottom:4px">Expected columns: <code style="color:var(--acc2)">Emp ID | Name | FeUser | Team | Batch | Location | Team Leader | SME | Email ID</code></p>
+      <p style="color:var(--mut);font-size:.78rem;margin-bottom:14px">✅ Existing employees will be updated in-place by Emp ID.</p>
+      <div class="upload-area" onclick="$('emp-file').click()">
+        <div style="font-size:2rem;margin-bottom:8px">📂</div>
+        <p style="font-weight:600">Click to upload Excel (.xlsx / .xls)</p>
+        <p style="color:var(--mut);font-size:.8rem;margin-top:4px">Merges with existing data — safe to re-import</p>
+        <input type="file" id="emp-file" accept=".xlsx,.xls" style="display:none" onchange="handleEmpImport(event)"/>
+      </div>
+      <div id="import-status" style="margin-top:10px;font-size:.84rem;display:none"></div>
+    </div>
+    <div class="panel">
+      <div style="margin-bottom:12px"><input id="emp-search" class="tp-input" type="text" placeholder="Search name, team, ID…" style="max-width:300px" oninput="renderEmpTable()"/></div>
+      <div style="overflow-x:auto">
+        <table class="tp-table"><thead><tr><th>Emp ID</th><th>Name</th><th>FE User</th><th>Team</th><th>Batch</th><th>Location</th><th>Team Leader</th><th>SME</th><th>Email</th></tr></thead>
+        <tbody id="emp-tbl"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- AUDIT PANEL -->
+  <div id="page-audit" class="page">
+    <h1 style="font-size:1.4rem;font-weight:700;margin-bottom:6px">Audit Panel</h1>
+    <p style="color:var(--mut);font-size:.82rem;margin-bottom:18px">Submit a new quality audit</p>
+    <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:20px">
+      <div class="panel">
+        <h2 style="font-size:1rem;font-weight:600;margin-bottom:16px">Agent Details</h2>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div><label class="tp-label">Select Employee *</label><select id="a-emp" class="tp-input" onchange="autofillEmp()"><option value="">-- Choose Employee --</option></select></div>
+          <div><label class="tp-label">Order ID *</label><input id="a-order" class="tp-input" type="text" placeholder="ORD-20260413-001"/></div>
+          <div><label class="tp-label">Team</label><input id="a-team" class="tp-input" readonly style="opacity:.6"/></div>
+          <div><label class="tp-label">Supervisor</label><input id="a-sup" class="tp-input" readonly style="opacity:.6"/></div>
+          <div><label class="tp-label">SME</label><input id="a-sme" class="tp-input" readonly style="opacity:.6"/></div>
+          <div><label class="tp-label">Audited By</label><input id="a-auditor" class="tp-input" readonly style="opacity:.9;background:rgba(99,102,241,.08);border-color:var(--acc)"/></div>
+          <div><label class="tp-label">Employee Email <span style="color:var(--mut);font-size:.72rem">(auto-filled)</span></label><input id="a-emp-email" class="tp-input" readonly style="opacity:.7;background:rgba(99,102,241,.04)" placeholder="Select employee above"/></div>
+        </div>
+      </div>
+      <div class="panel" style="overflow-y:auto;max-height:700px">
+        <h2 style="font-size:1rem;font-weight:600;margin-bottom:4px">Quality Scorecard</h2>
+        <p style="color:var(--mut);font-size:.74rem;margin-bottom:12px">Weighted scoring — YES=full, NO=0, NA=excluded, FATAL=instant 0 (total 100pts)</p>
+        <div id="scorecard"></div>
+        <div class="glow-line"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <div><p style="color:var(--mut);font-size:.78rem">Weighted Score</p><p id="score-prev" style="font-size:1.8rem;font-weight:700;color:var(--acc2)">—</p></div>
+          <div><p style="color:var(--mut);font-size:.78rem">Status</p><p id="status-prev" style="font-size:1.1rem;font-weight:600;color:var(--mut)">—</p></div>
+        </div>
+        <div style="margin-bottom:16px">
+          <label class="tp-label">Feedback <span style="color:var(--mut);font-size:.72rem">(optional — included in email report)</span></label>
+          <textarea id="a-feedback" class="tp-input" rows="4" placeholder="Enter feedback for the employee…" style="resize:vertical;min-height:90px;font-family:'DM Sans',sans-serif;font-size:.85rem;line-height:1.5"></textarea>
+        </div>
+        <button class="tp-btn" id="submit-audit-btn" onclick="submitAudit()">📧 Submit Audit &amp; Send Report</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUMMARY -->
+  <div id="page-summary" class="page">
+    <h1 style="font-size:1.4rem;font-weight:700;margin-bottom:6px">Audit Summary</h1>
+    <p style="color:var(--mut);font-size:.82rem;margin-bottom:16px">Complete audit history</p>
+    <div class="sum-top">
+      <div class="sum-card"><p style="color:var(--mut);font-size:.74rem;margin-bottom:4px">Today's Audits</p><p id="st-today" style="font-size:1.6rem;font-weight:700;color:var(--acc2)">0</p></div>
+      <div class="sum-card"><p style="color:var(--mut);font-size:.74rem;margin-bottom:4px">Overall Avg Quality</p><p id="st-avg" style="font-size:1.6rem;font-weight:700;color:var(--ok)">0%</p></div>
+      <div class="sum-card"><p style="color:var(--mut);font-size:.74rem;margin-bottom:6px">Agents Audited per Team</p><div id="st-teams" style="font-size:.77rem;text-align:left;max-height:60px;overflow-y:auto"></div></div>
+    </div>
+    <div class="panel">
+      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+        <input id="sum-q" class="tp-input" type="text" placeholder="Search…" style="max-width:240px" oninput="renderSumTable()"/>
+        <select id="sum-status" class="f-sel" onchange="renderSumTable()"><option value="">All</option><option value="PASS">PASS</option><option value="FAIL">FAIL</option></select>
+        <button class="tp-btn tp-btn-outline tp-btn-sm" onclick="exportCSV()">⬇ Export</button>
+        <span id="sum-count" style="margin-left:auto;font-size:.8rem;color:var(--mut)"></span>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="tp-table"><thead><tr><th>#</th><th>Agent</th><th>Team</th><th>Supervisor</th><th>SME</th><th>Order ID</th><th>Score</th><th>Status</th><th>Auditor</th><th>Date</th></tr></thead>
+        <tbody id="sum-tbl"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN -->
+  <div id="page-admin" class="page">
+    <h1 style="font-size:1.4rem;font-weight:700;margin-bottom:6px">Admin Panel <span class="admin-badge">ADMIN ONLY</span></h1>
+    <p style="color:var(--mut);font-size:.82rem;margin-bottom:18px">Edit, delete audit and employee records</p>
+    <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+      <button class="tp-btn tp-btn-sm tp-btn-danger" onclick="clearAllAudits()">🗑 Clear All Audits</button>
+      <button class="tp-btn tp-btn-sm tp-btn-outline" onclick="exportCSV()">⬇ Export CSV</button>
+    </div>
+    <div class="panel" style="margin-bottom:20px">
+      <h2 style="font-size:1rem;font-weight:600;margin-bottom:12px">All Audit Records</h2>
+      <div style="display:flex;gap:10px;margin-bottom:10px;align-items:center;flex-wrap:wrap">
+        <input id="adm-q" class="tp-input" type="text" placeholder="Search…" style="max-width:240px" oninput="renderAdmTable()"/>
+        <button id="del-sel-btn" class="tp-btn tp-btn-sm tp-btn-danger" onclick="delSelAudits()" style="display:none">🗑 Delete Selected (<span id="sel-cnt">0</span>)</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="tp-table">
+          <thead><tr><th><input type="checkbox" id="chk-all" onchange="togAllAudits(this)" style="accent-color:var(--acc)"/></th><th>#</th><th>Agent</th><th>Team</th><th>Order ID</th><th>Score</th><th>Status</th><th>Auditor</th><th>Date</th><th>Actions</th></tr></thead>
+          <tbody id="adm-tbl"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="panel">
+      <h2 style="font-size:1rem;font-weight:600;margin-bottom:12px">Employee Records</h2>
+      <div style="display:flex;gap:10px;margin-bottom:10px;align-items:center">
+        <button id="del-emp-btn" class="tp-btn tp-btn-sm tp-btn-danger" onclick="delSelEmps()" style="display:none">🗑 Delete Selected (<span id="emp-sel-cnt">0</span>)</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="tp-table">
+          <thead><tr><th><input type="checkbox" id="chk-all-emp" onchange="togAllEmps(this)" style="accent-color:var(--acc)"/></th><th>Emp ID</th><th>Name</th><th>Team</th><th>Team Leader</th><th>SME</th><th>Email</th><th>Actions</th></tr></thead>
+          <tbody id="adm-emp-tbl"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROFILE -->
+  <div id="page-profile" class="page">
+    <h1 style="font-size:1.4rem;font-weight:700;margin-bottom:6px">My Profile</h1>
+    <p style="color:var(--mut);font-size:.82rem;margin-bottom:18px">Your account information</p>
+
+    <!-- Horizontal profile card -->
+    <div class="panel" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+        <div style="position:relative;flex-shrink:0">
+          <div id="prof-avatar" style="width:80px;height:80px;border-radius:50%;background:rgba(99,102,241,.2);border:2px solid var(--acc);display:flex;align-items:center;justify-content:center;font-size:2rem;overflow:hidden;cursor:pointer" onclick="$('prof-pic-input').click()" title="Click to change photo">👤</div>
+          <input type="file" id="prof-pic-input" accept="image/*" style="display:none" onchange="uploadProfilePic(event)"/>
+          <div style="position:absolute;bottom:-2px;right:-2px;background:var(--acc);border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:.6rem;cursor:pointer;border:2px solid var(--bg)" onclick="$('prof-pic-input').click()" title="Change photo">✏</div>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:1.2rem;font-weight:700;margin-bottom:2px" id="prof-name">—</div>
+          <div style="font-size:.82rem;color:var(--mut);margin-bottom:8px" id="prof-email">—</div>
+          <span class="badge" id="prof-role-badge" style="background:rgba(99,102,241,.2);color:var(--acc2)">—</span>
+        </div>
+        <div style="font-size:.7rem;color:var(--mut);text-align:right;flex-shrink:0">Click avatar to<br>change photo</div>
+      </div>
+    </div>
+
+    <!-- Reportees -->
+    <div class="panel" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <h2 style="font-size:.95rem;font-weight:600">👥 My Reportees</h2>
+        <div style="display:flex;gap:6px" id="prof-loc-tabs">
+          <button class="tp-btn tp-btn-outline tp-btn-sm" id="prof-tab-all" onclick="filterReporteesByLoc('all')" style="background:rgba(99,102,241,.2);color:var(--acc2)">All</button>
+          <button class="tp-btn tp-btn-outline tp-btn-sm" id="prof-tab-chennai" onclick="filterReporteesByLoc('Chennai')">Chennai</button>
+          <button class="tp-btn tp-btn-outline tp-btn-sm" id="prof-tab-indore" onclick="filterReporteesByLoc('Indore')">Indore</button>
+        </div>
+      </div>
+      <div id="prof-reportees" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px"></div>
+    </div>
+
+    <!-- Teams Managed -->
+    <div class="panel">
+      <h2 style="font-size:.95rem;font-weight:600;margin-bottom:14px">🏢 Teams Managed</h2>
+      <div id="prof-teams" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- MODALS -->
+<div id="ed-modal" class="modal-bg" style="display:none">
+  <div class="modal">
+    <h2 style="font-size:1.1rem;font-weight:700;margin-bottom:16px">✏ Edit Audit</h2>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div><label class="tp-label">Agent</label><input id="ed-ag" class="tp-input"/></div>
+      <div><label class="tp-label">Order ID</label><input id="ed-ord" class="tp-input"/></div>
+      <div><label class="tp-label">Team</label><input id="ed-tm" class="tp-input"/></div>
+      <div><label class="tp-label">Score (0–100)</label><input id="ed-sc" class="tp-input" type="number" min="0" max="100" onchange="$('ed-st').value=+this.value>=85?'PASS':'FAIL'"/></div>
+      <div><label class="tp-label">Status</label><input id="ed-st" class="tp-input" readonly style="opacity:.7"/></div>
+      <div style="display:flex;gap:10px"><button class="tp-btn" onclick="saveAuditEdit()">Save</button><button class="tp-btn tp-btn-outline" onclick="closeM('ed-modal')">Cancel</button></div>
+    </div>
+  </div>
+</div>
+<div id="ed-emp-modal" class="modal-bg" style="display:none">
+  <div class="modal">
+    <h2 style="font-size:1.1rem;font-weight:700;margin-bottom:16px">✏ Edit Employee</h2>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div><label class="tp-label">Name</label><input id="ee-nm" class="tp-input"/></div>
+      <div><label class="tp-label">Team</label><input id="ee-tm" class="tp-input"/></div>
+      <div><label class="tp-label">Team Leader</label><input id="ee-tl" class="tp-input"/></div>
+      <div><label class="tp-label">SME</label><input id="ee-sme" class="tp-input"/></div>
+      <div><label class="tp-label">Email</label><input id="ee-em" class="tp-input"/></div>
+      <div style="display:flex;gap:10px"><button class="tp-btn" onclick="saveEmpEdit()">Save</button><button class="tp-btn tp-btn-outline" onclick="closeM('ed-emp-modal')">Cancel</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- CHATBOT -->
+<button id="chat-fab" title="TeamPulse AI">🤖</button>
+<div id="chat-win">
+  <div class="chat-hdr" id="chat-drag">
+    <div class="chat-hdr-ttl"><span>🤖</span><div><div style="font-size:.88rem">TeamPulse AI</div><div style="font-size:.66rem;color:var(--mut);font-weight:400">Data-driven insights</div></div></div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:.7rem;color:var(--mut)">Opacity:</span>
+      <select id="chat-op" onchange="$('chat-win').style.opacity=this.value" style="background:rgba(255,255,255,.06);border:1px solid var(--bdr);border-radius:6px;padding:2px 6px;color:var(--txt);font-size:.72rem;cursor:pointer">
+        <option value="1">100%</option><option value="0.9">90%</option><option value="0.8">80%</option><option value="0.5">50%</option><option value="0.3">30%</option>
+      </select>
+      <button onclick="toggleChat()" style="background:none;border:none;color:var(--mut);cursor:pointer;font-size:1.1rem;padding:0">✕</button>
+    </div>
+  </div>
+  <div id="chat-msgs">
+    <div class="cmsg ai">👋 Hi! I'm TeamPulse AI. Ask me about audit data — scores, trends, pass rates, top performers and more!</div>
+  </div>
+  <div class="chat-quick">
+    <button class="cqb" onclick="qChat('Who is the top performer?')">Top performer</button>
+    <button class="cqb" onclick="qChat('Show agents below 85%')">Below 85%</button>
+    <button class="cqb" onclick="qChat('What is the overall pass rate?')">Pass rate</button>
+    <button class="cqb" onclick="qChat('Summarize by team')">By team</button>
+  </div>
+  <div class="chat-inp-row">
+    <textarea id="chat-inp" rows="1" placeholder="Ask about audit data…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}"></textarea>
+    <button id="chat-send" onclick="sendChat()">➤</button>
+  </div>
+</div>
+
+<script>
+const LS_USERS='tpUsers',LS_SES='tpSession';
+const auditKey=e=>'tpAudits_'+e;
+const empKey=e=>'tpEmps_'+e;
+const ADMIN='Chris Mcguinness';
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+const SC=[
+  {cat:'Call Execution',p:'Greeting & Opening',r:5},
+  {cat:'Call Execution',p:'Actual Communication',r:10},
+  {cat:'Call Execution',p:'Empathy & Tone',r:3},
+  {cat:'Call Execution',p:'Hold Procedure',r:2},
+  {cat:'Call Execution',p:'Correct Contact/Number',r:10},
+  {cat:'Call Execution',p:'Location Verified',r:5},
+  {cat:'Location/Records',p:'Records Available/Update on all rec',r:10},
+  {cat:'Location/Records',p:'COR Details Updated',r:5},
+  {cat:'Documentation',p:'Clear, Detailed Notes',r:10},
+  {cat:'Documentation',p:'Web Description Updated',r:5},
+  {cat:'Documentation',p:'Correct Status Code',r:10},
+  {cat:'Documentation',p:'Loc Profile - Update Notes',r:5},
+  {cat:'Progress',p:'Exhaustive Research',r:5},
+  {cat:'Progress',p:'Escalation Process Followed',r:10},
+  {cat:'Progress',p:'No Redundant Updates',r:5},
+];
+const SC_CATS=['Call Execution','Location/Records','Documentation','Progress'];
+const SC_CAT_MAX={};
+SC.forEach(p=>{SC_CAT_MAX[p.cat]=(SC_CAT_MAX[p.cat]||0)+p.r;});
+
+const CHART_COLORS={
+  quality:{bg:'rgba(99,102,241,0.65)',border:'rgba(99,102,241,0.9)'},
+  pass:{bg:'rgba(52,211,153,0.60)',border:'rgba(52,211,153,0.85)'},
+  fail:{bg:'rgba(248,113,113,0.60)',border:'rgba(248,113,113,0.85)'},
+  fatal:{bg:'rgba(251,146,60,0.60)',border:'rgba(251,146,60,0.85)'},
+};
+
+const BASE_EMPS=[{"id":"emp_1003","empId":"1003","name":"Akash Patil","feUser":"Akash Patil - Smith","team":"ARS","batch":"Batch-7","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Akash Patil","email":"AP0@compexlegal.com"},{"id":"emp_1413","empId":"1413","name":"Minhal Rizvi","feUser":"Minhal Rizvin - Max","team":"ARS","batch":"Batch-11","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Akash Patil","email":"MaxM@arslegalca.com"},{"id":"emp_1549","empId":"1549","name":"Sriraj R","feUser":"Sriraj R - Damon","team":"ARS","batch":"Batch -2 (Chennai)","location":"Chennai","teamLeader":"Mohit Satrawala","sme":"Akash Patil","email":"DamonS@arslegalca.com"},{"id":"emp_2975","empId":"2975","name":"Harpreet Kaur","feUser":"Harpreet Kaur - Jenny","team":"ARS","batch":"Batch - 19","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Akash Patil","email":"jenny.kaur@arslegalca.com"},{"id":"emp_3098","empId":"3098","name":"Mugundhan S","feUser":"Mugundhan S - Jeff","team":"ARS","batch":"Batch -8 (Chennai)","location":"Chennai","teamLeader":"Mohit Satrawala","sme":"Akash Patil","email":"MSJ@compexlegal.com"},{"id":"emp_425","empId":"425","name":"Poonit Pandey","feUser":"Poonit Pandey - Patrick","team":"ARS","batch":"Batch -8 (Chennai)","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Akash Patil","email":"PPP@arslegalca.com"},{"id":"emp_3261","empId":"3261","name":"Vikas Sen","feUser":"Vikas Sen - Leo","team":"ARS","batch":"Batch - 21","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Akash Patil","email":"leo.sen@arslegalca.com"},{"id":"emp_3503","empId":"3503","name":"Aarav Mishra","feUser":"Aarav Mishra - Ron","team":"ARS","batch":"Batch-23","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Akash Patil","email":"ron.mishra@compexlegal.com"},{"id":"emp_579","empId":"579","name":"Divya Sharma","feUser":"Divya Sharma - Hazel","team":"CS","batch":"Batch-2","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Divya Sharma","email":"HazelD@compexlegal.com"},{"id":"emp_1409","empId":"1409","name":"Mahak Moryani","feUser":"Mahak Moryani - Mayra","team":"CS","batch":"Batch-11","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Divya Sharma","email":"MayraM@compexlegal.com"},{"id":"emp_3172","empId":"3172","name":"Neha Soni","feUser":"Neha Soni - Natasha","team":"CS","batch":"Batch-11","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Divya Sharma","email":"natasha.soni@compexlegal.com"},{"id":"emp_1730","empId":"1730","name":"Shalini Sharma","feUser":"Shalini Sharma - Kia","team":"CS","batch":"Batch-14","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Divya Sharma","email":"kia.sharma@compexlegal.com"},{"id":"emp_2504","empId":"2504","name":"Syed Safin Ali","feUser":"Safin Ali - Star","team":"CS","batch":"Batch-16","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Divya Sharma","email":"star.ali@compexlegal.com"},{"id":"emp_2704","empId":"2704","name":"Amit Sharma","feUser":"Amit Sharma - Rio","team":"CS","batch":"Batch -17","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Divya Sharma","email":"rio.sharma@compexlegal.com"},{"id":"emp_2740","empId":"2740","name":"Jatin Gupta","feUser":"Jatin Gupta - Silas","team":"CS","batch":"Batch - 18","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Divya Sharma","email":"silas.gupta@compexlegal.com"},{"id":"emp_2753","empId":"2753","name":"Rahul G","feUser":"Rahul G - Richard","team":"CS","batch":"Batch - 18","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Divya Sharma","email":"richard.g@compexlegal.com"},{"id":"emp_2755","empId":"2755","name":"Samsun Daniel","feUser":"Samsun Daniel - Sam","team":"CS","batch":"Batch - 18","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Divya Sharma","email":"sam.daniel@compexlegal.com"},{"id":"emp_2966","empId":"2966","name":"Akshay Daniel","feUser":"Akshay Daniel - James","team":"CS","batch":"Batch - 19","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Divya Sharma","email":"james.daniel@compexlegal.com"},{"id":"emp_2978","empId":"2978","name":"Madhuri Tirkey","feUser":"Madhuri Tirkey - Brenda","team":"CS","batch":"Batch - 19","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Divya Sharma","email":"brenda.tirkey@compexlegal.com"},{"id":"emp_2994","empId":"2994","name":"Tushar Patwa","feUser":"Tushar Patwa - Mike","team":"CS","batch":"Batch - 19","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Divya Sharma","email":"mike.patwa@compexlegal.com"},{"id":"emp_3205","empId":"3205","name":"Ashni Singh","feUser":"Ashni Singh - Olivia","team":"CS","batch":"Batch - 20","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Divya Sharma","email":"olivia.singh@compexlegal.com"},{"id":"emp_3253","empId":"3253","name":"Deepak Kumayu","feUser":"Deepak Kumayu - Dean","team":"FL 1 Pod","batch":"Batch-14","location":"Indore","teamLeader":"Vibish V","sme":"-","email":"dean.kumayu@compexlegal.com"},{"id":"emp_675","empId":"675","name":"Shubham Agrawal","feUser":"Shubham Agrawal - David","team":"FL Pod","batch":"Batch-3","location":"Indore","teamLeader":"Vibish V","sme":"-","email":"DavidS@compexlegal.com"},{"id":"emp_816","empId":"816","name":"Mahak Saraswat","feUser":"Mahak Saraswat - Layla","team":"FL Pod","batch":"Supervisor","location":"Indore","teamLeader":"Vibish V","sme":"-","email":"LaylaM@compexlegal.com"},{"id":"emp_1419","empId":"1419","name":"Pawan Kumawat","feUser":"Pawan Kumawat - Zale","team":"FL Pod","batch":"Batch-11","location":"Indore","teamLeader":"Vibish V","sme":"-","email":"ZaleP@compexlegal.com"},{"id":"emp_2473","empId":"2473","name":"Anjali Prajapati","feUser":"Anjali Prajapati - Ana","team":"FL Pod","batch":"Batch-16","location":"Indore","teamLeader":"Vibish V","sme":"-","email":"ana.prajapati@compexlegal.com"},{"id":"emp_2476","empId":"2476","name":"Arpit Singh Tomar","feUser":"Arpit Tomar - Klaus","team":"FL Pod","batch":"Batch-16","location":"Indore","teamLeader":"Vibish V","sme":"-","email":"klaus.tomar@compexlegal.com"},{"id":"emp_3209","empId":"3209","name":"Honey Kashyap","feUser":"Honey Kashyap - Robert","team":"FL Pod","batch":"Batch - 20","location":"Indore","teamLeader":"Vibish V","sme":"-","email":"robert.kashyap@compexlegal.com"},{"id":"emp_3210","empId":"3210","name":"Jaspreet Siddhu","feUser":"Jaspreet Siddhu - Jordan","team":"FL Pod","batch":"Batch - 20","location":"Indore","teamLeader":"Vibish V","sme":"-","email":"jordan.siddhu@compexlegal.com"},{"id":"emp_1594","empId":"1594","name":"Devang Vaidya","feUser":"Devang Vaidya - Derek","team":"Lost Item","batch":"Batch-12","location":"Indore","teamLeader":"Mohit Satrawala","sme":"-","email":"derekd@compexlegal.com"},{"id":"emp_2487","empId":"2487","name":"Kathit Singh Gehlot","feUser":"Kathit Gehlot - Rafa","team":"Lost Item","batch":"Batch-16","location":"Indore","teamLeader":"Mohit Satrawala","sme":"-","email":"KGR@compexlegal.com"},{"id":"emp_3208","empId":"3208","name":"Dipendra Raghuvanshi","feUser":"Dipendra Raghuvanshi - Levi","team":"Lost Item","batch":"Batch - 20","location":"Indore","teamLeader":"Mohit Satrawala","sme":"-","email":"levi.raghuvanshi@compexlegal.com"},{"id":"emp_1816","empId":"1816","name":"Nishi Modak","feUser":"Nishi Modak - Myra","team":"MidWest Pod","batch":"Batch-14","location":"Indore","teamLeader":"Anushree Arora","sme":"Yash Mishra","email":"myra.modak@compexlegal.com"},{"id":"emp_2506","empId":"2506","name":"Vikas Bhati","feUser":"Vikas Bhati - Flynn","team":"MidWest Pod","batch":"Batch-16","location":"Indore","teamLeader":"Anushree Arora","sme":"Yash Mishra","email":"flynn.bhati@compexlegal.com"},{"id":"emp_2509","empId":"2509","name":"Samridhi Jain","feUser":"Samridhi Jain - Alice","team":"MidWest Pod","batch":"Batch-16","location":"Indore","teamLeader":"Anushree Arora","sme":"Yash Mishra","email":"alice.jain@compexlegal.com"},{"id":"emp_2702","empId":"2702","name":"Yash Mishra","feUser":"Yash Mishra - Dave","team":"MidWest Pod","batch":"Batch -17","location":"Indore","teamLeader":"Anushree Arora","sme":"Yash Mishra","email":"dave.mishra@compexlegal.com"},{"id":"emp_2739","empId":"2739","name":"Himani Tiwari","feUser":"Himani Tiwari - Daphne","team":"MidWest Pod","batch":"Batch - 18","location":"Indore","teamLeader":"Anushree Arora","sme":"Yash Mishra","email":"daphne.tiwari@compexlegal.com"},{"id":"emp_3199","empId":"3199","name":"Aditya Yadav","feUser":"Aditya Yadav - Pat","team":"MidWest Pod","batch":"Batch - 20","location":"Indore","teamLeader":"Anushree Arora","sme":"Yash Mishra","email":"pat.yadav@compexlegal.com"},{"id":"emp_3221","empId":"3221","name":"Rupali Guru","feUser":"Rupali Guru - Scarlett","team":"MidWest Pod","batch":"Batch - 20","location":"Indore","teamLeader":"Anushree Arora","sme":"Yash Mishra","email":"scarlett.guru@compexlegal.com"},{"id":"emp_3464","empId":"3464","name":"Neha Shrestha","feUser":"Neha Shrestha - Grace","team":"MidWest Pod","batch":"Batch - 22","location":"Indore","teamLeader":"Anushree Arora","sme":"Yash Mishra","email":"Grace.Shrestha@compexlegal.com"},{"id":"emp_3473","empId":"3473","name":"Varsha Singh","feUser":"Varsha Singh - Sophia","team":"MidWest Pod","batch":"Batch - 22","location":"Indore","teamLeader":"Anushree Arora","sme":"Yash Mishra","email":"Sophia.singh@compexlegal.com"},{"id":"emp_3468","empId":"3468","name":"Shivani Vyas","feUser":"Shivani Vyas - Sheere","team":"MidWest Pod","batch":"Batch-22","location":"Indore","teamLeader":"Anushree Arora","sme":"Yash Mishra","email":"sheere.vyas@compexlegal.com"},{"id":"emp_1691","empId":"1691","name":"Victor John","feUser":"Victor John - Samson","team":"NE Pod ","batch":"Batch -4 (Chennai)","location":"Chennai","teamLeader":"Anushree Arora","sme":"Rahul Soni","email":"SamsonV@compexlegal.com"},{"id":"emp_2982","empId":"2982","name":"Prince Vachher","feUser":"Prince Vachher - Prince","team":"NE Pod ","batch":"Batch - 19","location":"Indore","teamLeader":"Anushree Arora","sme":"Rahul Soni","email":"prince.vachher@compexlegal.com"},{"id":"emp_3207","empId":"3207","name":"Chander Maurya","feUser":"Chander Maurya - Mason","team":"NE Pod ","batch":"Batch - 20","location":"Indore","teamLeader":"Anushree Arora","sme":"Rahul Soni","email":"mason.maurya@compexlegal.com"},{"id":"emp_3228","empId":"3228","name":"Vishal Adhikari","feUser":"Vishal Adhikari - Aron","team":"NE Pod ","batch":"Batch - 20","location":"Indore","teamLeader":"Anushree Arora","sme":"Rahul Soni","email":"aron.adhikari@compexlegal.com"},{"id":"emp_3241","empId":"3241","name":"Shruti Dwivedi","feUser":"Shruti Dwivedi - Katie","team":"NE Pod ","batch":"Batch - 20","location":"Indore","teamLeader":"Anushree Arora","sme":"Rahul Soni","email":"katie.dwivedi@compexlegal.com"},{"id":"emp_1775","empId":"1775","name":"Aashish Vishwakarma","feUser":"Aashish Vishwakarma - Clay","team":"Nonlit Pod","batch":"Batch-13","location":"Indore","teamLeader":"Shubham Agrawal","sme":"Ashish Vishwakarma","email":"ClayA@compexlegal.com"},{"id":"emp_1894","empId":"1894","name":"Chris Sheldon Mcguinness","feUser":"Chris Mcguinness - Chris","team":"Nonlit Pod","batch":"Supervisor","location":"Chennai","teamLeader":"Shubham Agrawal","sme":"Ashish Vishwakarma","email":"chris.mcguinness@compexlegal.com"},{"id":"emp_1922","empId":"1922","name":"Vijay Banoda","feUser":"Vijay Banodha - Vance","team":"Nonlit Pod","batch":"Batch-14","location":"Indore","teamLeader":"Shubham Agrawal","sme":"Ashish Vishwakarma","email":"vance.banodha@compexlegal.com"},{"id":"emp_2742","empId":"2742","name":"Komal Gupta","feUser":"Komal Gupta - Lily","team":"Nonlit Pod","batch":"Batch - 18","location":"Indore","teamLeader":"Shubham Agrawal","sme":"Ashish Vishwakarma","email":"lily.gupta@compexlegal.com"},{"id":"emp_2750","empId":"2750","name":"Prabhjyot Singh Virmani","feUser":"Prabhjyot Singh - William","team":"Nonlit Pod","batch":"Batch - 18","location":"Indore","teamLeader":"Shubham Agrawal","sme":"Ashish Vishwakarma","email":"william.singh@compexlegal.com"},{"id":"emp_2980","empId":"2980","name":"Pratyaksh Pancholi","feUser":"Pratyaksh Pancholi - Harry","team":"Nonlit Pod","batch":"Batch - 19","location":"Indore","teamLeader":"Shubham Agrawal","sme":"Ashish Vishwakarma","email":"harry.pancholi@compexlegal.com"},{"id":"emp_2998","empId":"2998","name":"Vishal Lalawat","feUser":"Vishal Lalawat - Roy","team":"Nonlit Pod","batch":"Batch - 19","location":"Indore","teamLeader":"Shubham Agrawal","sme":"Ashish Vishwakarma","email":"roy.lalawat@compexlegal.com"},{"id":"emp_2609","empId":"2609","name":"Anand Singh","feUser":"Anand Singh - Joy","team":"Nonlit Pod","batch":"Batch -8 (Chennai)","location":"Indore","teamLeader":"Shubham Agrawal","sme":"Ashish Vishwakarma","email":"joy.singh@compexlegal.com"},{"id":"emp_1994","empId":"1994","name":"Agam Sachdev","feUser":"Agam Sachdev - Adam","team":"Nonlit Pod","batch":"Batch -8 (Chennai)","location":"Indore","teamLeader":"Shubham Agrawal","sme":"Ashish Vishwakarma","email":"adam.sachdev@compexlegal.com"},{"id":"emp_3248","empId":"3248","name":"Aishwarya Sharma","feUser":"Aishwarya Sharma - Aish","team":"Nonlit Pod","batch":"Batch - 21","location":"Indore","teamLeader":"Shubham Agrawal","sme":"Ashish Vishwakarma","email":"aish.sharma@compexlegal.com"},{"id":"emp_3465","empId":"3465","name":"Richa Raikwar","feUser":"Richa Raikwar - Rose","team":"Nonlit Pod","batch":"Batch - 22","location":"Indore","teamLeader":"Shubham Agrawal","sme":"Ashish Vishwakarma","email":"Rose.Raikwar@compexlegal.com"},{"id":"emp_3517","empId":"3517","name":"Umesh Paliwal","feUser":"Umesh Paliwal - Alex","team":"NonLit POD","batch":"Batch-23","location":"Indore","teamLeader":"Shubham Agrawal","sme":"Ashish Vishwakarma","email":"alex.paliwal@compexlegal.com"},{"id":"emp_3512","empId":"3512","name":"Prashansha Jain","feUser":"Prashansha Jain - Patricia","team":"NonLit POD","batch":"Batch-23","location":"Indore","teamLeader":"Shubham Agrawal","sme":"Ashish Vishwakarma","email":"patricia.jain@compexlegal.com"},{"id":"emp_558","empId":"558","name":"Mohit Satrawala","feUser":"Mohit Satrawala - Ross","team":"NY Pod","batch":"Batch-1","location":"Indore","teamLeader":"Chris Mcguinness","sme":"Rahul Soni","email":"RossM@compexlegal.com"},{"id":"emp_711","empId":"711","name":"Rahul Soni","feUser":"Soni Rahul - Alester","team":"NY Pod","batch":"Batch-4","location":"Indore","teamLeader":"Chris Mcguinness","sme":"Rahul Soni","email":"AlesterS@arslegalca.com"},{"id":"emp_784","empId":"784","name":"Anushree Arora","feUser":"Anushree Arora - Emily","team":"NY Pod","batch":"Batch-5","location":"Indore","teamLeader":"Chris Mcguinness","sme":"Rahul Soni","email":"EmilyA@compexlegal.com"},{"id":"emp_1464","empId":"1464","name":"Gokul Venkatesan","feUser":"Gokul Venkatesan - Peter","team":"NY Pod","batch":"Batch -1 (Chennai)","location":"Chennai","teamLeader":"Chris Mcguinness","sme":"Rahul Soni","email":"PeterG@compexlegal.com"},{"id":"emp_2745","empId":"2745","name":"Manish Mishra","feUser":"Manish Mishra - Maddy","team":"NY Pod","batch":"Batch - 18","location":"Indore","teamLeader":"Chris Mcguinness","sme":"Rahul Soni","email":"maddy.mishra@CompexLegal.onmicrosoft.com"},{"id":"emp_2763","empId":"2763","name":"Akshat Gokhru","feUser":"Akshat Gokhru - Leo","team":"NY Pod","batch":"Batch - 18","location":"Indore","teamLeader":"Chris Mcguinness","sme":"Rahul Soni","email":"leo.gokhru@compexlegal.com"},{"id":"emp_3222","empId":"3222","name":"Shobhit Tomar","feUser":"Shobhit Tomar - Matt","team":"NY Pod","batch":"Batch - 20","location":"Indore","teamLeader":"Chris Mcguinness","sme":"Rahul Soni","email":"matt.tomar@compexlegal.com"},{"id":"emp_3214","empId":"3214","name":"Mayank Bhushan","feUser":"Mayank Bhushan - Tim","team":"NY Pod","batch":"Batch - 20","location":"Indore","teamLeader":"Chris Mcguinness","sme":"Rahul Soni","email":"tim.bhushan@compexlegal.com"},{"id":"emp_3260","empId":"3260","name":"Vikas Sharma","feUser":"Vikas Sharma - Vinson","team":"NY Pod","batch":"Batch - 21","location":"Indore","teamLeader":"Chris Mcguinness","sme":"Rahul Soni","email":"vinson.sharma@compexlegal.com"},{"id":"emp_3255","empId":"3255","name":"Manish Sharma","feUser":"Manish Sharma - Mark","team":"NY Pod","batch":"Batch - 21","location":"Indore","teamLeader":"Chris Mcguinness","sme":"Rahul Soni","email":"mark.sharma@compexlegal.com"},{"id":"emp_3507","empId":"3507","name":"Kamal Singh","feUser":"Kamal Singh - Nathan","team":"NY Pod","batch":"Batch-23","location":"Indore","teamLeader":"Chris Mcguinness","sme":"Rahul Soni","email":"nathan.singh@compexlegal.com"},{"id":"emp_1162","empId":"1162","name":"Amlesh Pandey","feUser":"Amlesh Pandey - Ammo","team":"ROI","batch":"Batch-9","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Bhavani Harikrishnan","email":"AmmoA@compexlegal.com"},{"id":"emp_1631","empId":"1631","name":"Bhavani Harikrishnan","feUser":"Bhavani Harikrishnan - Hellen","team":"ROI","batch":"Batch -3 (Chennai)","location":"Chennai","teamLeader":"Mohit Satrawala","sme":"Bhavani Harikrishnan","email":"HellenB@compexlegal.com"},{"id":"emp_1797","empId":"1797","name":"Shubham Talreja","feUser":"Shubham Talreja - Shane","team":"ROI","batch":"Batch-13","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Bhavani Harikrishnan","email":"ShaneT@compexlegal.com"},{"id":"emp_2542","empId":"2542","name":"Adarsh G","feUser":"Adarsh G - Scott","team":"ROI","batch":"Batch -7 (Chennai)","location":"Chennai","teamLeader":"Mohit Satrawala","sme":"Bhavani Harikrishnan","email":"scott.g@compexlegal.com"},{"id":"emp_2746","empId":"2746","name":"Naman Tomar","feUser":"Naman Tomar - Nick","team":"ROI","batch":"Batch - 18","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Bhavani Harikrishnan","email":"nick.tomar@compexlegal.com"},{"id":"emp_2981","empId":"2981","name":"Prem Sharma","feUser":"Prem Sharma - Roy","team":"ROI","batch":"Batch - 19","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Bhavani Harikrishnan","email":"Roy.Sharma@compexlegal.com"},{"id":"emp_2997","empId":"2997","name":"Vishakha Puri","feUser":"Vishakha Puri - Victoria","team":"ROI","batch":"Batch - 19","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Bhavani Harikrishnan","email":"Victoria.Puri@compexlegal.com"},{"id":"emp_3093","empId":"3093","name":"Preetha A","feUser":"Preetha A - Jennifer","team":"ROI","batch":"Batch -8 (Chennai)","location":"Chennai","teamLeader":"Mohit Satrawala","sme":"Bhavani Harikrishnan","email":"jennifer.a@compexlegal.com"},{"id":"emp_3103","empId":"3103","name":"Shafana Bee","feUser":"Shafana Bee - Molina","team":"ROI","batch":"Batch -8 (Chennai)","location":"Chennai","teamLeader":"Mohit Satrawala","sme":"Bhavani Harikrishnan","email":"molina.bee@compexlegal.com"},{"id":"emp_3104","empId":"3104","name":"Sowpoornika M","feUser":"Sowpoornika M - Jessica","team":"ROI","batch":"Batch -8 (Chennai)","location":"Chennai","teamLeader":"Mohit Satrawala","sme":"Bhavani Harikrishnan","email":"jessica.m@compexlegal.com"},{"id":"emp_3107","empId":"3107","name":"Umesh Y","feUser":"Umesh Y - Mike","team":"ROI","batch":"Batch -8 (Chennai)","location":"Chennai","teamLeader":"Mohit Satrawala","sme":"Bhavani Harikrishnan","email":"mike.y@compexlegal.com"},{"id":"emp_3215","empId":"3215","name":"Mayank Dantre","feUser":"Mayank Dantre - Will","team":"ROI","batch":"Batch - 20","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Bhavani Harikrishnan","email":"will.dantre@compexlegal.com"},{"id":"emp_3201","empId":"3201","name":"Anjali Jaiswal","feUser":"Anjali Jaiswal - Barb","team":"ROI","batch":"Batch - 20","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Bhavani Harikrishnan","email":"barb.jaiswal@compexlegal.com"},{"id":"emp_3223","empId":"3223","name":"Somya Yadav","feUser":"Somya Yadav - Stella","team":"ROI","batch":"Batch - 20","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Bhavani Harikrishnan","email":"stella.yadav@compexlegal.com"},{"id":"emp_3203","empId":"3203","name":"Armaan Benedict","feUser":"Armaan Benedict - Henry","team":"ROI","batch":"Batch - 20","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Bhavani Harikrishnan","email":"henry.benedict@compexlegal.com"},{"id":"emp_3226","empId":"3226","name":"Uneer Sharma","feUser":"Uneer Sharma - Liam","team":"ROI","batch":"Batch - 20","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Bhavani Harikrishnan","email":"liam.sharma@compexlegal.com"},{"id":"emp_3246","empId":"3246","name":"Mampy Nandi","feUser":"Mampy Nandi - Anny","team":"ROI","batch":"Batch - 20","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Bhavani Harikrishnan","email":"anny.nandi@compexlegal.com"},{"id":"emp_3249","empId":"3249","name":"Ali Raza Sheikh","feUser":"Ali Raza Sheikh - Andrew","team":"ROI","batch":"Batch - 21","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Bhavani Harikrishnan","email":"andrew.sheikh@compexlegal.com"},{"id":"emp_3254","empId":"3254","name":"Divya Solanki","feUser":"Divya Solanki - Daisy","team":"ROI","batch":"Batch - 21","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Bhavani Harikrishnan","email":"daisy.solanki@compexlegal.com"},{"id":"emp_3256","empId":"3256","name":"Mohd Saif","feUser":"Mohd Saif - Ryan","team":"ROI","batch":"Batch - 21","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Bhavani Harikrishnan","email":"ryan.saif@compexlegal.com"},{"id":"emp_3459","empId":"3459","name":"Ajay Pancholi","feUser":"Ajay Pancholi - Lincoln","team":"ROI","batch":"Batch - 22","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Bhavani Harikrishnan","email":"Lincoln.Pancholi@compexlegal.com"},{"id":"emp_3460","empId":"3460","name":"Kritika Krishnan","feUser":"Kritika Krishnan - Chloe","team":"ROI","batch":"Batch - 22","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Bhavani Harikrishnan","email":"chloe.krishnan@compexlegal.com"},{"id":"emp_3463","empId":"3463","name":"Neeraj Jaiswal","feUser":"Neeraj Jaiswal - Tony","team":"ROI","batch":"Batch - 22","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Bhavani Harikrishnan","email":"Tony.Jaiswal@compexlegal.com"},{"id":"emp_3466","empId":"3466","name":"Rounit Philip","feUser":"Rounit Philip - Sam","team":"ROI","batch":"Batch - 22","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Bhavani Harikrishnan","email":"Sam.Philip@compexlegal.com"},{"id":"emp_3467","empId":"3467","name":"Shakti Singh","feUser":"Shakti Singh - Eric","team":"ROI","batch":"Batch - 22","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Bhavani Harikrishnan","email":"Eric.Singh@compexlegal.com"},{"id":"emp_3469","empId":"3469","name":"Shubhanshu Kori","feUser":"Shubhanshu Kori - Sean","team":"ROI","batch":"Batch - 22","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Bhavani Harikrishnan","email":"Sean.Kori@compexlegal.com"},{"id":"emp_3470","empId":"3470","name":"Sushmit Choudhary","feUser":"Sushmit Choudhary - Roman","team":"ROI","batch":"Batch - 22","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Bhavani Harikrishnan","email":"Roman.Choudhary@compexlegal.com"},{"id":"emp_3509","empId":"3509","name":"Mansi Banik","feUser":"Mansi Banik - Maya","team":"ROI","batch":"Batch-23","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Bhavani Harikrishnan","email":"maya.banik@compexlegal.com"},{"id":"emp_3505","empId":"3505","name":"Darpan Thakur","feUser":"Darpan Thakur - Mathew","team":"ROI","batch":"Batch-23","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Bhavani Harikrishnan","email":"mathew.thakur@compexlegal.com"},{"id":"emp_3513","empId":"3513","name":"Rishabh Patel","feUser":"Rishabh Patel - Ralph","team":"ROI","batch":"Batch-23","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Bhavani Harikrishnan","email":"ralph.patel@compexlegal.com"},{"id":"emp_3508","empId":"3508","name":"Kapil Shastri","feUser":"Kapil Shastri - Joey","team":"ROI","batch":"Batch-23","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Bhavani Harikrishnan","email":"joey.shastri@compexlegal.com"},{"id":"emp_2752","empId":"2752","name":"Priyanka Patel","feUser":"Priyanka Patel - Clara","team":"ROI","batch":"Batch-18","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Bhavani Harikrishnan","email":"clara.patel@compexlegal.com"},{"id":"emp_3457","empId":"3457","name":"Aashish Verma","feUser":"Aashish Verma - Steven","team":"ROI","batch":"Batch-22","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Bhavani Harikrishnan","email":"steven.verma@compexlegal.com"},{"id":"emp_1538","empId":"1538","name":"P Vimalarasu","feUser":"P Vimalarasu - Matthew","team":"TLC","batch":"Batch -2 (Chennai)","location":"Chennai","teamLeader":"Vibish V","sme":"-","email":"MatthewP@compexlegal.com"},{"id":"emp_3100","empId":"3100","name":"S R Puvaraghavan","feUser":"S Puvaraghavan - Ricky","team":"TLC","batch":"Batch -4 (Chennai)","location":"Chennai","teamLeader":"Vibish V","sme":"-","email":"ricky.puvaraghavan@compexlegal.com"},{"id":"emp_1929","empId":"1929","name":"Praveen Kumar R","feUser":"Praveen R - Brando","team":"TLC","batch":"Batch -5 (Chennai)","location":"Chennai","teamLeader":"Vibish V","sme":"-","email":"brando.r@compexlegal.com"},{"id":"emp_2572","empId":"2572","name":"Subash Devaraj","feUser":"Subash Devaraj - Aron","team":"TLC","batch":"Batch -7 (Chennai)","location":"Chennai","teamLeader":"Vibish V","sme":"-","email":"aron.devaraj@compexlegal.com"},{"id":"emp_2612","empId":"2612","name":"Poovarasu Palani","feUser":"Poovarasu Palani - Josh","team":"TLC","batch":"Batch -7 (Chennai)","location":"Chennai","teamLeader":"Vibish V","sme":"-","email":"josh.palani@compexlegal.com"},{"id":"emp_3584","empId":"3584","name":"Saivenkateshwar Rao","feUser":"Saivenkateshwar Rao - Bratt","team":"Training","batch":"Batch-24","location":"Chennai","teamLeader":"Mohit Satrawala","sme":"Yash Mishra","email":"bratt.rao@compexlegal.com"},{"id":"emp_3566","empId":"3566","name":"Sharanya Jaspal","feUser":"Sharanya Jaspal - Gothic","team":"Training","batch":"Batch-24","location":"Indore","teamLeader":"Mohit Satrawala","sme":"Yash Mishra","email":"Gothic.Jaspal@compexlegal.com"},{"id":"emp_1483","empId":"1483","name":"Vibish V","feUser":"Vibish V - Cesar","team":"Wsky Pod","batch":"Batch -2 (Chennai)","location":"Chennai","teamLeader":"Shubham Agrawal","sme":"Ashish Vishwakarma","email":"CesarV@compexlegal.com"},{"id":"emp_2573","empId":"2573","name":"Sudharshini Asohan","feUser":"Sudharshini Asohan - Sherin","team":"Wsky Pod","batch":"Batch -7 (Chennai)","location":"Chennai","teamLeader":"Shubham Agrawal","sme":"Ashish Vishwakarma","email":"sherin.asohan@compexlegal.com"},{"id":"emp_2576","empId":"2576","name":"Sridhar T","feUser":"Sridhar T - Jake","team":"Wsky Pod","batch":"Batch -7 (Chennai)","location":"Chennai","teamLeader":"Shubham Agrawal","sme":"Ashish Vishwakarma","email":"jake.t@compexlegal.com"},{"id":"emp_3216","empId":"3216","name":"Nayab Hussain","feUser":"Nayab Hussain - Ben","team":"Wsky Pod","batch":"Batch - 20","location":"Indore","teamLeader":"Shubham Agrawal","sme":"Ashish Vishwakarma","email":"ben.hussain@compexlegal.com"},{"id":"emp_3219","empId":"3219","name":"Rishika Rai","feUser":"Rishika Rai - Crystal","team":"Wsky Pod","batch":"Batch - 20","location":"Indore","teamLeader":"Shubham Agrawal","sme":"Ashish Vishwakarma","email":"crystal.rai@compexlegal.com"},{"id":"emp_3263","empId":"3263","name":"Vishwas Joshi","feUser":"Vishwas Joshi - Rob","team":"Wsky Pod","batch":"Batch - 21","location":"Indore","teamLeader":"Shubham Agrawal","sme":"Ashish Vishwakarma","email":"rob.joshi@compexlegal.com"}];
+
+let CU=null,allAudits=[],filteredAudits=[],localEmps=[],charts={},editAuditId=null,editEmpId=null;
+const chatHist=[];
+const msState={month:[],team:[],emp:[],sup:[],sme:[]};
+const msOpts={month:[],team:[],emp:[],sup:[],sme:[]};
+let feTeamFilter='';
+
+const $=id=>document.getElementById(id);
+const lsGet=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d;}catch{return d;}};
+const lsSet=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+const fmt=d=>new Date(d).toLocaleDateString('en-GB');
+
+function seededRandom(seed){
+  let s=seed;
+  return function(){s=(s*1664525+1013904223)&0xffffffff;return(s>>>0)/4294967296;};
+}
+
+function toast(msg,type='ok'){
+  const t=$('toast');
+  t.textContent=msg;
+  t.style.color=type==='bad'?'var(--bad)':type==='warn'?'var(--warn)':'var(--ok)';
+  t.style.borderColor=type==='bad'?'var(--bad)':type==='warn'?'var(--warn)':'var(--ok)';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+// ═══════════════ SIDEBAR INSIGHTS ════════════════════════════════
+// Spec: below profile, above sign-out. Updates on every filter change.
+// Metrics: Top FE User, Lowest POD, Most Fails, WoW Trend, Total Audits
+function renderSidebarInsights(a){
+  const el=$('si-body');
+  if(!el)return;
+  if(!a||!a.length){
+    el.innerHTML='<div style="font-size:.72rem;color:var(--mut);padding:4px 0">No data yet</div>';
+    return;
+  }
+
+  // 1. Top FE User (highest avg quality)
+  const agentMap={};
+  a.forEach(x=>{
+    if(!x.agentName)return;
+    if(!agentMap[x.agentName])agentMap[x.agentName]={scores:[],fails:0};
+    agentMap[x.agentName].scores.push(x.score||0);
+    if(x.status==='FAIL'||x.hasFatal)agentMap[x.agentName].fails++;
+  });
+  const agentRanked=Object.entries(agentMap)
+    .map(([n,d])=>({name:n,avg:Math.round(d.scores.reduce((s,v)=>s+v,0)/d.scores.length),fails:d.fails}))
+    .sort((a,b)=>b.avg-a.avg);
+  const topAgent=agentRanked[0];
+
+  // 2. Lowest POD (lowest avg quality)
+  const podMap={};
+  a.forEach(x=>{if(!x.team)return;if(!podMap[x.team])podMap[x.team]=[];podMap[x.team].push(x.score||0);});
+  const podRanked=Object.entries(podMap)
+    .map(([t,s])=>({team:t,avg:Math.round(s.reduce((v,c)=>v+c,0)/s.length)}))
+    .sort((a,b)=>a.avg-b.avg);
+  const lowestPod=podRanked[0];
+
+  // 3. Most Fails (FE user with highest fail count)
+  const mostFails=agentRanked.slice().sort((a,b)=>b.fails-a.fails)[0];
+
+  // 4. WoW Trend (current week avg vs previous week)
+  function getWeekStart(d){const dt=new Date(d);dt.setHours(0,0,0,0);dt.setDate(dt.getDate()-dt.getDay());return dt.getTime();}
+  const now=Date.now();
+  const thisWeekStart=getWeekStart(now);
+  const lastWeekStart=thisWeekStart-7*86400000;
+  const thisWeekAudits=a.filter(x=>getWeekStart(x.date)===thisWeekStart);
+  const lastWeekAudits=a.filter(x=>getWeekStart(x.date)===lastWeekStart);
+  let wowHtml='—';
+  if(thisWeekAudits.length&&lastWeekAudits.length){
+    const twAvg=Math.round(thisWeekAudits.reduce((s,x)=>s+(x.score||0),0)/thisWeekAudits.length);
+    const lwAvg=Math.round(lastWeekAudits.reduce((s,x)=>s+(x.score||0),0)/lastWeekAudits.length);
+    const diff=twAvg-lwAvg;
+    const sign=diff>=0?'↑':'↓';
+    const cls=diff>=0?'si-pos':'si-neg';
+    wowHtml=`<span class="${cls}">${sign}${Math.abs(diff)}% vs last wk</span>`;
+  } else if(thisWeekAudits.length){
+    const twAvg=Math.round(thisWeekAudits.reduce((s,x)=>s+(x.score||0),0)/thisWeekAudits.length);
+    wowHtml=`<span class="si-neu">${twAvg}% this wk</span>`;
+  }
+
+  // 5. Total Audits
+  const total=a.length;
+
+  // Build rows
+  const truncate=(s,n)=>s&&s.length>n?s.slice(0,n-1)+'…':s||'—';
+
+  el.innerHTML=`
+    <div class="si-row">
+      <span class="si-label">🥇 Top User</span>
+      <span class="si-value si-pos" title="${topAgent?.name||'—'}">${truncate(topAgent?.name?.split(' ')[0]||'—',12)} ${topAgent?topAgent.avg+'%':''}</span>
+    </div>
+    <div class="si-row">
+      <span class="si-label">📉 Low POD</span>
+      <span class="si-value si-neg" title="${lowestPod?.team||'—'}">${truncate(lowestPod?.team||'—',14)} ${lowestPod?lowestPod.avg+'%':''}</span>
+    </div>
+    <div class="si-row">
+      <span class="si-label">❌ Most Fails</span>
+      <span class="si-value si-warn" title="${mostFails?.name||'—'}">${truncate(mostFails?.name?.split(' ')[0]||'—',10)} (${mostFails?.fails||0})</span>
+    </div>
+    <div class="si-row">
+      <span class="si-label">📈 WoW</span>
+      <span class="si-value">${wowHtml}</span>
+    </div>
+    <div class="si-row">
+      <span class="si-label">📋 Audits</span>
+      <span class="si-value si-neu">${total.toLocaleString()}</span>
+    </div>`;
+}
+
+function populateYearDropdown(){
+  const sel=$('f-year');if(!sel)return;
+  const now=new Date();
+  const currentYear=now.getFullYear();
+  const dataYears=new Set(allAudits.map(a=>a.year).filter(Boolean));
+  dataYears.add(currentYear);dataYears.add(currentYear+1);
+  const sorted=[...dataYears].sort((a,b)=>b-a);
+  const selectedVal=sel.value;
+  sel.innerHTML='<option value="">All Years</option>'+sorted.map(y=>`<option value="${y}"${String(selectedVal)===String(y)?' selected':''}>${y}</option>`).join('');
+}
+
+function toggleAuth(){
+  const lf=$('login-form'),sf=$('signup-form');
+  lf.style.display=lf.style.display==='none'?'block':'none';
+  sf.style.display=sf.style.display==='none'?'block':'none';
+}
+function handleSignup(){
+  const name=$('su-name').value.trim(),email=$('su-email').value.trim().toLowerCase(),pass=$('su-pass').value,role=$('su-role').value;
+  if(!name||!email||!pass)return toast('Fill all fields','warn');
+  if(pass.length<6)return toast('Password min 6 chars','warn');
+  const users=lsGet(LS_USERS,[]);
+  if(users.find(u=>u.email===email))return toast('Already registered','warn');
+  users.push({name,email,pass,role});lsSet(LS_USERS,users);
+  toast('Account created!');toggleAuth();
+}
+function handleLogin(){
+  const email=$('li-email').value.trim().toLowerCase(),pass=$('li-pass').value;
+  const users=lsGet(LS_USERS,[]);
+  let u=users.find(x=>x.email===email&&x.pass===pass);
+  if(!u&&email==='chris@teampulse.com'&&pass==='admin123'){
+    u={name:ADMIN,email:'chris@teampulse.com',role:'MANAGER'};
+    const all=lsGet(LS_USERS,[]);if(!all.find(x=>x.email===u.email)){all.push({...u,pass:'admin123'});lsSet(LS_USERS,all);}
+  }
+  if(!u)return toast('Invalid credentials','bad');
+  lsSet(LS_SES,{email:u.email,name:u.name,role:u.role});bootApp(u);
+}
+function handleLogout(){
+  localStorage.removeItem(LS_SES);CU=null;allAudits=[];
+  $('auth-screen').style.display='flex';$('app').style.display='none';destroyCharts();
+}
+function bootApp(u){
+  CU=u;
+  $('w-name').textContent='Welcome, '+u.name;
+  $('w-role').textContent=u.role+(u.name===ADMIN?' · ADMIN':'');
+  $('auth-screen').style.display='none';$('app').style.display='block';
+  $('tb-date').textContent=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const isMgr=u.role==='MANAGER';
+  $('admin-nav').style.display=isMgr?'flex':'none';
+  $('demo-btn').style.display=isMgr?'inline-flex':'none';
+  $('a-auditor').value=u.name;
+  const stored=lsGet(empKey(u.email),null);
+  localEmps=stored?stored:[...BASE_EMPS];
+  buildScorecard();populateAuditDrop();populateMsFilters();renderEmpTable();
+  buildHmMonthSelect();
+  const pic=lsGet('tpPic_'+u.email,null);
+  if(pic){$('profile-btn').innerHTML=`<img src="${pic}"/>`;$('prof-avatar').innerHTML=`<img src="${pic}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`;}
+  loadAudits();
+  showPage('dashboard',document.querySelector('.nav-item'));
+  setTimeout(initDragDrop,200);
+}
+(function(){const s=lsGet(LS_SES,null);if(s&&s.email)bootApp(s);})();
+
+const LS_LAYOUT='tpDashLayout';
+function initDragDrop(){
+  const container=$('dash-sortable-container');
+  if(!container||typeof Sortable==='undefined')return;
+  restoreCardOrder();
+  Sortable.create(container,{
+    animation:200,handle:'.drag-handle, .dash-card-wrapper',
+    ghostClass:'sortable-ghost',chosenClass:'sortable-chosen',
+    scroll:true,scrollSensitivity:80,scrollSpeed:10,
+    onEnd:()=>{saveCardOrder();setTimeout(()=>Object.values(charts).forEach(c=>{try{c.resize();}catch{}}),250);}
+  });
+}
+function saveCardOrder(){
+  const c=$('dash-sortable-container');if(!c)return;
+  lsSet(LS_LAYOUT,[...c.querySelectorAll('.dash-card-wrapper')].map(el=>el.dataset.cardId));
+}
+function restoreCardOrder(){
+  const saved=lsGet(LS_LAYOUT,null);if(!saved||!Array.isArray(saved))return;
+  const c=$('dash-sortable-container');if(!c)return;
+  saved.forEach(id=>{const el=c.querySelector(`[data-card-id="${id}"]`);if(el)c.appendChild(el);});
+}
+
+function showPage(pg,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  $('page-'+pg).classList.add('active');
+  if(el)el.classList.add('active');
+  if(pg==='dashboard'){renderDashboard();setTimeout(initDragDrop,200);}
+  if(pg==='summary'){renderSumTable();renderSumTop();}
+  if(pg==='admin'){renderAdmTable();renderAdmEmpTable();}
+  if(pg==='profile')renderProfilePage();
+}
+
+function uploadProfilePic(evt){
+  const file=evt.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const b64=e.target.result;
+    lsSet('tpPic_'+CU.email,b64);
+    $('profile-btn').innerHTML=`<img src="${b64}"/>`;
+    $('prof-avatar').innerHTML=`<img src="${b64}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`;
+    toast('Profile picture updated!');
+  };
+  reader.readAsDataURL(file);
+}
+// Profile page state
+let _profAllReportees=[];
+
+function getMyReportees(){
+  if(!CU)return[];
+  if(CU.role==='MANAGER'||CU.name===ADMIN){
+    // Manager sees ALL employees
+    return localEmps;
+  } else if(CU.role==='SME'){
+    // SME sees only employees where sme===their name
+    return localEmps.filter(e=>e.sme===CU.name);
+  } else {
+    // LEAD sees only employees where teamLeader===their name
+    return localEmps.filter(e=>e.teamLeader===CU.name);
+  }
+}
+
+function renderProfilePage(){
+  $('prof-name').textContent=CU.name;
+  $('prof-email').textContent=CU.email;
+  $('prof-role-badge').textContent=CU.role;
+  // Restore profile pic if saved
+  const pic=lsGet('tpPic_'+CU.email,null);
+  if(pic){$('prof-avatar').innerHTML=`<img src="${pic}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"/>`;}
+  // Get reportees scoped to this user's role
+  _profAllReportees=getMyReportees();
+  // De-duplicate by name
+  const seen=new Set();
+  _profAllReportees=_profAllReportees.filter(e=>{if(!e.name||seen.has(e.name))return false;seen.add(e.name);return true;});
+  // Sort: Chennai first, Indore second, others last, then alphabetically
+  _profAllReportees.sort((a,b)=>{
+    const locOrder=l=>{if(!l)return 3;const ll=l.toLowerCase();if(ll.includes('chennai'))return 1;if(ll.includes('indore'))return 2;return 3;};
+    const lo=locOrder(a.location)-locOrder(b.location);
+    return lo!==0?lo:(a.name||'').localeCompare(b.name||'');
+  });
+  // Update location tab visibility based on available locations
+  const locs=new Set(_profAllReportees.map(e=>(e.location||'').toLowerCase()));
+  $('prof-tab-chennai').style.display=locs.size?'':'none';
+  $('prof-tab-indore').style.display=locs.size?'':'none';
+  filterReporteesByLoc('all');
+  // Teams — scoped to this user's reportees
+  const teams=[...new Set(_profAllReportees.map(e=>e.team).filter(Boolean))].sort();
+  $('prof-teams').innerHTML=teams.length?teams.map(t=>`<span style="background:rgba(99,102,241,.15);border:1px solid var(--bdr);border-radius:20px;padding:4px 14px;font-size:.8rem;color:var(--acc2)">${t}</span>`).join(''):'<p style="color:var(--mut);font-size:.82rem">No teams</p>';
+}
+
+function filterReporteesByLoc(loc){
+  // Update active tab styling
+  ['all','Chennai','Indore'].forEach(l=>{
+    const btn=$('prof-tab-'+l.toLowerCase());
+    if(btn){btn.style.background=loc===l?'rgba(99,102,241,.3)':'';btn.style.color=loc===l?'var(--acc2)':'';btn.style.borderColor=loc===l?'var(--acc)':'';}
+  });
+  const filtered=loc==='all'?_profAllReportees:_profAllReportees.filter(e=>(e.location||'').toLowerCase().includes(loc.toLowerCase()));
+  $('prof-reportees').innerHTML=filtered.length?filtered.map(e=>{
+    const locTag=e.location?`<span style="font-size:.65rem;background:rgba(99,102,241,.12);border-radius:4px;padding:1px 6px;color:var(--acc2);margin-left:4px">${e.location}</span>`:'';
+    return `<div style="background:rgba(99,102,241,.08);border:1px solid var(--bdr);border-radius:8px;padding:8px 12px;">
+      <div style="font-size:.82rem;font-weight:600;display:flex;align-items:center;gap:4px;flex-wrap:wrap">${e.name}${locTag}</div>
+      <div style="font-size:.72rem;color:var(--mut);margin-top:2px">${e.team||''}${e.teamLeader&&CU.role!=='LEAD'?' · '+e.teamLeader:''}</div>
+    </div>`;
+  }).join(''):'<p style="color:var(--mut);font-size:.82rem">No reportees'+(loc!=='all'?' in '+loc:'')+'</p>';
+}
+
+function handleEmpImport(evt){
+  const file=evt.target.files[0];if(!file)return;
+  const status=$('import-status');
+  status.style.display='block';status.style.color='var(--acc2)';status.textContent='⏳ Parsing…';
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const wb=XLSX.read(e.target.result,{type:'binary'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+      let added=0,updated=0;
+      rows.forEach(row=>{
+        const empId=String(row['Emp ID']||row['EmpID']||row['emp_id']||'').trim();if(!empId)return;
+        const inc={id:'emp_'+empId,empId,name:String(row['Name']||'').trim(),feUser:String(row['FeUser']||row['FE User']||'').trim(),team:String(row['Team']||'').trim(),batch:String(row['Batch']||'').trim(),location:String(row['Location']||'').trim(),teamLeader:String(row['Team Leader']||row['TeamLeader']||'').trim(),sme:String(row['SME']||'').trim(),email:String(row['Email ID']||row['Email']||'').trim()};
+        if(!inc.name)return;
+        const idx=localEmps.findIndex(e=>e.empId===empId);
+        if(idx>=0){localEmps[idx]={...localEmps[idx],...inc};updated++;}else{localEmps.push(inc);added++;}
+      });
+      lsSet(empKey(CU.email),localEmps);
+      status.style.color='var(--ok)';status.textContent=`✅ Done — ${added} added, ${updated} updated. Total: ${localEmps.length}`;
+      populateAuditDrop();populateMsFilters();renderEmpTable();populateFETeamFilter();
+      toast(`Import complete: +${added} new, ${updated} updated`);
+    }catch(err){status.style.color='var(--bad)';status.textContent='❌ Error: '+err.message;toast('Import failed','bad');}
+  };
+  reader.readAsBinaryString(file);evt.target.value='';
+}
+
+function renderEmpTable(){
+  const q=(($('emp-search')||{}).value||'').toLowerCase();
+  const data=localEmps.filter(e=>!q||e.name.toLowerCase().includes(q)||e.team.toLowerCase().includes(q)||e.empId.includes(q));
+  $('emp-tbl').innerHTML=data.length?data.map(e=>`<tr><td>${e.empId}</td><td>${e.name}</td><td>${e.feUser||''}</td><td>${e.team}</td><td>${e.batch||''}</td><td>${e.location||''}</td><td>${e.teamLeader}</td><td>${e.sme}</td><td>${e.email}</td></tr>`).join(''):`<tr><td colspan="9" style="text-align:center;color:var(--mut);padding:20px">No results</td></tr>`;
+}
+function populateAuditDrop(){
+  let emps=localEmps;
+  if(CU&&(CU.role==='LEAD'||CU.role==='SME'))emps=localEmps.filter(e=>e.teamLeader===CU.name||e.sme===CU.name);
+  $('a-emp').innerHTML='<option value="">-- Choose Employee --</option>'+emps.map(e=>`<option value="${e.id}">${e.name} (${e.empId}) — ${e.team}</option>`).join('');
+}
+
+function populateMsFilters(){
+  const uniq=k=>[...new Set(localEmps.map(e=>e[k]).filter(Boolean))].sort();
+  msOpts.month=[...MONTHS];msOpts.team=uniq('team');msOpts.emp=uniq('name');
+  msOpts.sup=uniq('teamLeader');msOpts.sme=uniq('sme').filter(s=>s&&s!=='-');
+  ['month','team','emp','sup','sme'].forEach(k=>renderMsList(k));
+}
+
+function populateFETeamFilter(){
+  const sel=$('fe-team-filter');if(!sel)return;
+  const teams=[...new Set(localEmps.map(e=>e.team).filter(Boolean))].sort();
+  const prev=sel.value;
+  sel.innerHTML='<option value="">All Teams</option>'+teams.map(t=>`<option value="${t}"${t===prev?' selected':''}>${t}</option>`).join('');
+  feTeamFilter=sel.value;
+}
+
+// SPEC FIX: on filter change — destroy old chart, recalculate width, recreate
+function onFETeamFilterChange(){
+  feTeamFilter=$('fe-team-filter').value;
+  // DESTROY existing chart instance before recreating
+  if(charts.podBar){try{charts.podBar.destroy();}catch{}delete charts.podBar;}
+  buildFEUserBar(filteredAudits);
+}
+
+function renderMsList(k,filter=''){
+  const opts=msOpts[k].filter(o=>!filter||o.toLowerCase().includes(filter.toLowerCase()));
+  $('ms-'+k+'-list').innerHTML=opts.map(o=>`
+    <label class="ms-item"><input type="checkbox" value="${o}" ${msState[k].includes(o)?'checked':''} onchange="msTog('${k}','${o}',this.checked)"/><span>${o}</span></label>`).join('');
+}
+function filterMsOpts(inp,k){renderMsList(k,inp.value);}
+function msTog(k,val,checked){
+  if(checked){if(!msState[k].includes(val))msState[k].push(val);}else{msState[k]=msState[k].filter(v=>v!==val);}
+  updateMsBtn(k);applyFilters();
+}
+function msSelAll(k){msState[k]=[...msOpts[k]];renderMsList(k);updateMsBtn(k);applyFilters();}
+function msClear(k){msState[k]=[];renderMsList(k);updateMsBtn(k);applyFilters();}
+function updateMsBtn(k){
+  const labels={month:'Month',team:'Team',emp:'Employee',sup:'Supervisor',sme:'SME'};
+  const btn=$('ms-'+k+'-btn');
+  if(!msState[k].length)btn.textContent='All '+labels[k]+'s';
+  else if(msState[k].length===1)btn.textContent=msState[k][0];
+  else btn.textContent=msState[k].length+' '+labels[k]+'s';
+}
+function toggleMs(k){
+  ['month','team','emp','sup','sme'].forEach(x=>{if(x!==k)$('ms-'+x+'-dd').classList.remove('open');});
+  $('ms-'+k+'-dd').classList.toggle('open');
+}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.ms-wrap')){['month','team','emp','sup','sme'].forEach(k=>$('ms-'+k+'-dd')&&$('ms-'+k+'-dd').classList.remove('open'));}
+});
+
+function getRoleBaseAudits(audits){
+  if(!CU)return audits;
+  if(CU.role==='MANAGER'||CU.name===ADMIN)return audits;
+  const myEmps=localEmps.filter(e=>e.teamLeader===CU.name||e.sme===CU.name).map(e=>e.name);
+  return audits.filter(a=>myEmps.includes(a.agentName));
+}
+
+function buildScorecard(){
+  let h='',lc='';
+  SC.forEach((p,i)=>{
+    if(p.cat!==lc){h+=`<div class="sc-cat">${p.cat}</div>`;lc=p.cat;}
+    h+=`<div class="sc-row"><span class="sc-par">${p.p}</span><span class="sc-rng">(${p.r}pts)</span><div style="display:flex;gap:4px">
+      ${['YES','NO','NA','FATAL'].map(o=>`<button class="sb" data-i="${i}" data-v="${o}" onclick="selSc(this)">${o}</button>`).join('')}
+    </div></div>`;
+  });
+  $('scorecard').innerHTML=h;
+}
+function selSc(btn){document.querySelectorAll(`[data-i="${btn.dataset.i}"]`).forEach(b=>b.className='sb');btn.classList.add('s'+btn.dataset.v[0]);updateScPrev();}
+function getSel(){const r={};document.querySelectorAll('.sb').forEach(b=>{const c=[...b.classList].find(x=>x.startsWith('s')&&x.length===2&&x!=='sb');if(c)r[b.dataset.i]=b.dataset.v;});return r;}
+function calcScore(sel){
+  const vals=Object.entries(sel);if(!vals.length)return{score:null,status:null,hasFatal:false};
+  if(Object.values(sel).includes('FATAL'))return{score:0,status:'FAIL',hasFatal:true};
+  let tot=0,earned=0;
+  vals.forEach(([i,v])=>{const p=SC[+i];if(v==='NA')return;tot+=p.r;if(v==='YES')earned+=p.r;});
+  if(!tot)return{score:null,status:null,hasFatal:false};
+  const pct=Math.round(earned/tot*100);
+  return{score:pct,status:pct>=85?'PASS':'FAIL',hasFatal:false};
+}
+function updateScPrev(){
+  const{score,status}=calcScore(getSel());
+  $('score-prev').textContent=score===null?'—':score+'%';
+  $('status-prev').textContent=status||'—';
+  $('status-prev').style.color=status==='PASS'?'var(--ok)':status==='FAIL'?'var(--bad)':'var(--mut)';
+}
+
+function submitAudit(){
+  const empId=$('a-emp').value,orderId=$('a-order').value.trim();
+  if(!empId)return toast('Select an employee','warn');if(!orderId)return toast('Enter Order ID','warn');
+  const sel=getSel();if(Object.keys(sel).length<SC.length)return toast('Score all parameters','warn');
+  const{score,status,hasFatal}=calcScore(sel);
+  const emp=localEmps.find(e=>e.id===empId);const now=new Date();
+  const feedback=($('a-feedback').value||'').trim();
+  const audit={id:'a_'+Date.now()+'_'+Math.random().toString(36).slice(2,5),empId,orderId,agentName:emp?.name||'',team:emp?.team||'',supervisor:emp?.teamLeader||'',sme:emp?.sme||'',score,status,hasFatal,auditorName:CU.name,auditorRole:CU.role,selections:sel,feedback,month:MONTHS[now.getMonth()],year:now.getFullYear(),date:now.toISOString()};
+  const list=lsGet(auditKey(CU.email),[]);list.unshift(audit);lsSet(auditKey(CU.email),list);
+  toast(`✅ ${score}% — ${status}`);
+  // Send email report
+  const empEmail=($('a-emp-email').value||'').trim();
+  if(empEmail){sendAuditEmail(audit,emp,sel,empEmail);}else{toast('No email on file — report not sent','warn');}
+  $('a-emp').value='';$('a-order').value='';$('a-team').value='';$('a-sup').value='';$('a-sme').value='';$('a-emp-email').value='';$('a-feedback').value='';
+  buildScorecard();$('score-prev').textContent='—';$('status-prev').textContent='—';$('status-prev').style.color='var(--mut)';
+  loadAudits();
+}
+function autofillEmp(){
+  const emp=localEmps.find(e=>e.id===$('a-emp').value);
+  $('a-team').value=emp?.team||'';$('a-sup').value=emp?.teamLeader||'';$('a-sme').value=emp?.sme||'';
+  $('a-emp-email').value=emp?.email||'';
+}
+
+function loadAudits(){
+  let a=lsGet(auditKey(CU.email),[]);
+  a.sort((x,y)=>new Date(y.date)-new Date(x.date));
+  a=getRoleBaseAudits(a);
+  allAudits=[...a];filteredAudits=[...a];
+  populateYearDropdown();populateFETeamFilter();
+  renderDashboard();
+}
+
+function applyFilters(){
+  const ms=msState;
+  const selYear=$('f-year')&&$('f-year').value?Number($('f-year').value):null;
+  filteredAudits=allAudits.filter(a=>{
+    if(selYear&&a.year!==selYear)return false;
+    if(ms.month.length&&!ms.month.includes(a.month))return false;
+    if(ms.team.length&&!ms.team.includes(a.team))return false;
+    if(ms.emp.length&&!ms.emp.includes(a.agentName))return false;
+    if(ms.sup.length&&!ms.sup.includes(a.supervisor))return false;
+    if(ms.sme.length&&!ms.sme.includes(a.sme))return false;
+    return true;
+  });
+  destroyCharts();renderDashboard();renderSumTable();renderSumTop();
+}
+
+function generateDemo(){
+  if(CU.role!=='MANAGER'&&CU.name!==ADMIN){toast('Only managers can generate demo data','bad');return;}
+  let existing=lsGet(auditKey(CU.email),[]).filter(a=>!a.id.startsWith('demo'));
+  const demos=buildDemoDataset();
+  lsSet(auditKey(CU.email),[...demos,...existing]);
+  toast(demos.length+' demo audits generated (last 3 months)!');loadAudits();
+}
+function buildDemoDataset(){
+  const rng=seededRandom(20260414);
+  const now=new Date();const yr=now.getFullYear(),mo=now.getMonth();
+  const emps=localEmps.filter(e=>e.name&&e.team&&e.batch!=='Supervisor');
+  const auditors=[ADMIN,'Mohit Satrawala','Anushree Arora','Shubham Agrawal'];
+  const demos=[];
+  for(let mOff=0;mOff<3;mOff++){
+    const tgtDate=new Date(yr,mo-mOff,1);
+    const tgtMo=MONTHS[tgtDate.getMonth()];const tgtYr=tgtDate.getFullYear();
+    const daysInMo=new Date(tgtYr,tgtDate.getMonth()+1,0).getDate();
+    const maxDay=mOff===0?now.getDate():daysInMo;
+    const count=mOff===0?Math.floor(maxDay*2.5):80;
+    for(let i=0;i<count;i++){
+      const emp=emps[Math.floor(rng()*emps.length)];
+      const isFatal=rng()<0.04;let score;
+      if(isFatal){score=0;}else{const r=rng();if(r<0.15)score=Math.floor(rng()*20)+65;else score=Math.floor(rng()*15)+85;}
+      const day=Math.floor(rng()*(maxDay-1))+1;
+      const dow=new Date(tgtYr,tgtDate.getMonth(),day).getDay();
+      const adjDay=dow===0?Math.max(1,day-2):dow===6?Math.max(1,day-1):day;
+      demos.push({id:'demo_m'+mOff+'_'+i+'_'+(Math.floor(rng()*9999)),empId:emp.id,orderId:'ORD-'+tgtYr+(tgtDate.getMonth()+1).toString().padStart(2,'0')+'-'+String(1000+i).padStart(4,'0'),agentName:emp.name,team:emp.team,supervisor:emp.teamLeader,sme:emp.sme,score,status:(!isFatal&&score>=85)?'PASS':'FAIL',hasFatal:isFatal,auditorName:auditors[Math.floor(rng()*auditors.length)],auditorRole:'MANAGER',month:tgtMo,year:tgtYr,date:new Date(tgtYr,tgtDate.getMonth(),adjDay).toISOString()});
+    }
+  }
+  return demos.sort((a,b)=>new Date(b.date)-new Date(a.date));
+}
+
+function destroyCharts(){Object.values(charts).forEach(c=>{try{c.destroy();}catch{}});charts={};}
+
+function renderDashboard(){
+  const a=filteredAudits;
+  const tot=a.length,pass=a.filter(x=>x.status==='PASS').length,fail=a.filter(x=>x.status==='FAIL'&&!x.hasFatal).length,fatal=a.filter(x=>x.hasFatal).length;
+  const avg=tot?Math.round(a.reduce((s,x)=>s+(x.score||0),0)/tot):0;
+  $('s-total').textContent=tot;$('s-avg').textContent=avg+'%';
+  $('s-pass').textContent=tot?Math.round(pass/tot*100)+'%':'0%';
+  $('s-fail').textContent=tot?Math.round((fail+fatal)/tot*100)+'%':'0%';
+  renderLB(a);renderAlerts(a);renderRecentTable(a);renderQTP(a);
+  // SPEC: Update sidebar insights on every render/filter change
+  renderSidebarInsights(a);
+  setTimeout(()=>{renderCharts(a);renderHeatmap();},60);
+}
+
+function renderLB(a){
+  const m={};a.forEach(x=>{if(!x.agentName)return;if(!m[x.agentName])m[x.agentName]={s:[],c:0};m[x.agentName].s.push(x.score);m[x.agentName].c++;});
+  const r=Object.entries(m).map(([n,d])=>({n,avg:Math.round(d.s.reduce((a,v)=>a+v,0)/d.s.length),c:d.c})).sort((a,b)=>b.avg-a.avg).slice(0,5);
+  const md=['🥇','🥈','🥉','4️⃣','5️⃣'];
+  $('lb-body').innerHTML=r.length?r.map((x,i)=>`<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(99,102,241,.07)"><span>${md[i]}</span><div style="flex:1"><div style="font-size:.83rem;font-weight:600">${x.n}</div><div style="font-size:.71rem;color:var(--mut)">${x.c} audit${x.c>1?'s':''}</div></div><span style="font-weight:700;color:${x.avg>=85?'var(--ok)':'var(--bad)'}">${x.avg}%</span></div>`).join(''):'<p style="color:var(--mut);font-size:.82rem">No data</p>';
+}
+function renderAlerts(a){
+  const m={};a.forEach(x=>{if(!x.agentName)return;if(!m[x.agentName])m[x.agentName]=[];m[x.agentName].push(x.score);});
+  const al=Object.entries(m).map(([n,s])=>({n,avg:Math.round(s.reduce((a,v)=>a+v,0)/s.length)})).filter(x=>x.avg<85).sort((a,b)=>a.avg-b.avg);
+  $('al-body').innerHTML=al.length?al.slice(0,6).map(x=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;border-radius:8px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.18);margin-bottom:6px"><span style="font-size:.82rem">${x.n}</span><span style="font-weight:700;color:var(--bad)">${x.avg}%</span></div>`).join(''):'<p style="color:var(--ok);font-size:.82rem">✅ All agents above threshold</p>';
+}
+function renderRecentTable(a){
+  $('dash-tbl').innerHTML=a.length?a.slice(0,20).map(x=>`<tr><td>${x.agentName}</td><td>${x.team}</td><td style="font-family:'Space Mono',monospace;font-size:.77rem">${x.orderId}</td><td style="font-weight:600;color:${x.score>=85?'var(--ok)':'var(--bad)'}">${x.score}%</td><td><span class="badge badge-${x.status.toLowerCase()}">${x.status}${x.hasFatal?' ⚡':''}</span></td><td>${x.auditorName}</td><td style="color:var(--mut);font-size:.77rem">${fmt(x.date)}</td></tr>`).join(''):'<tr><td colspan="7" style="text-align:center;color:var(--mut);padding:30px">No audits yet</td></tr>';
+}
+
+function getQuarter(dateStr){return 'Q'+(Math.floor(new Date(dateStr).getMonth()/3)+1);}
+function renderQTP(a){
+  const grid=$('qtp-grid'),note=$('qtp-range-note');
+  if(!a.length){grid.innerHTML='<div style="color:var(--mut);font-size:.82rem;grid-column:1/-1;padding:20px 0;text-align:center">No audit data yet</div>';if(note)note.textContent='';return;}
+  const quarters=['Q1','Q2','Q3','Q4'];
+  const qData={};quarters.forEach(q=>{qData[q]={agents:{},pods:{}};});
+  a.forEach(x=>{
+    const q=getQuarter(x.date);if(!qData[q])return;
+    if(x.agentName){if(!qData[q].agents[x.agentName])qData[q].agents[x.agentName]=[];qData[q].agents[x.agentName].push(x.score||0);}
+    if(x.team){if(!qData[q].pods[x.team])qData[q].pods[x.team]=[];qData[q].pods[x.team].push(x.score||0);}
+  });
+  const topN=(map,n)=>Object.entries(map).map(([name,s])=>({name,avg:Math.round(s.reduce((a,v)=>a+v,0)/s.length),cnt:s.length})).sort((a,b)=>b.avg-a.avg).slice(0,n);
+  const medals=['🥇','🥈','🥉'];
+  const sc=v=>v>=85?'var(--ok)':'var(--bad)';
+  const active=quarters.filter(q=>Object.keys(qData[q].agents).length>0);
+  if(!active.length){grid.innerHTML='<div style="color:var(--mut);font-size:.82rem;grid-column:1/-1;padding:20px 0;text-align:center">No quarterly data</div>';if(note)note.textContent='';return;}
+  if(note)note.textContent=active.join(' · ')+' data shown';
+  grid.style.gridTemplateColumns=`repeat(${active.length},1fr)`;
+  grid.innerHTML=active.map(q=>{
+    const ta=topN(qData[q].agents,3),tp=topN(qData[q].pods,3);
+    const ar=ta.length?ta.map((x,i)=>`<div class="qtp-medal"><span class="qtp-medal-rank">${medals[i]||'·'}</span><span class="qtp-medal-name" title="${x.name}">${x.name.split(' ').slice(0,2).join(' ')}</span><span class="qtp-medal-score" style="color:${sc(x.avg)}">${x.avg}%</span></div>`).join(''):'<div style="color:var(--mut);font-size:.73rem;padding:4px 0">No data</div>';
+    const pr=tp.length?tp.map((x,i)=>`<div class="qtp-medal"><span class="qtp-medal-rank">${medals[i]||'·'}</span><span class="qtp-medal-name" title="${x.name}">${x.name}</span><span class="qtp-medal-score" style="color:${sc(x.avg)}">${x.avg}%</span></div>`).join(''):'<div style="color:var(--mut);font-size:.73rem;padding:4px 0">No data</div>';
+    return`<div class="qtp-col"><div class="qtp-col-hdr">${q}</div><div class="qtp-sub-label">FE Users</div>${ar}<div class="qtp-divider"></div><div class="qtp-sub-label">PODs</div>${pr}</div>`;
+  }).join('');
+}
+
+// ═══════════════ CHART BASE CONFIG ═══════════════════════════════
+const CC={g:'rgba(99,102,241,.1)',t:'#94a3b8',tip:{backgroundColor:'#0F1525',borderColor:'rgba(99,102,241,.3)',borderWidth:1,titleColor:'#e2e8f0',bodyColor:'#94a3b8'}};
+const TF={size:11,weight:'bold'};
+const TFS={size:10,weight:'bold'};
+
+function bOpts(){return{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:CC.t,font:{size:10},boxWidth:12}},tooltip:CC.tip},scales:{x:{grid:{color:CC.g},ticks:{color:CC.t,font:TF}},y:{grid:{color:CC.g},ticks:{color:CC.t,font:TF},min:0,max:100}}};}
+
+function renderCharts(a){
+  destroyCharts();
+  buildWoW(a);buildTrend(a);buildDonut(a);buildAgentLine(a);buildTeam(a);buildRadar(a);
+  buildFEUserBar(a);   // SPEC: always destroy+recreate
+  buildCallCriteriaBar(a);
+}
+
+function buildWoW(a){
+  if(!a.length)return;
+  function getWeekKey(ds){const d=new Date(ds);const j=new Date(d.getFullYear(),0,1);const w=Math.ceil(((d-j)/86400000+j.getDay()+1)/7);return{yr:d.getFullYear(),wk:w,label:'W'+String(w).padStart(2,'0')+'\''+String(d.getFullYear()).slice(-2)};}
+  const wm={};
+  a.forEach(x=>{if(!x.date)return;const{yr,wk,label}=getWeekKey(x.date);const k=yr*100+wk;if(!wm[k])wm[k]={label,scores:[],key:k};wm[k].scores.push(x.score||0);});
+  const sorted=Object.values(wm).sort((a,b)=>a.key-b.key).slice(-12);
+  const ctx=$('ch-wow')?.getContext('2d');if(!ctx)return;
+  if(sorted.length<2){charts.wow=new Chart(ctx,{type:'bar',data:{labels:['No weekly data'],datasets:[{label:'Avg Quality %',data:[0],backgroundColor:'rgba(99,102,241,.3)',borderRadius:5}]},options:{...bOpts(),plugins:{...bOpts().plugins,legend:{display:false}}}});return;}
+  const labels=sorted.map(w=>w.label);
+  const avgData=sorted.map(w=>Math.round(w.scores.reduce((s,v)=>s+v,0)/w.scores.length));
+  const n=avgData.length,xM=(n-1)/2,yM=avgData.reduce((s,v)=>s+v,0)/n;
+  let num=0,den=0;avgData.forEach((v,i)=>{num+=(i-xM)*(v-yM);den+=(i-xM)**2;});
+  const slope=den?num/den:0,intercept=yM-slope*xM;
+  const trendData=avgData.map((_,i)=>Math.round(slope*i+intercept));
+  charts.wow=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Weekly Avg %',data:avgData,backgroundColor:avgData.map(v=>v>=85?'rgba(99,102,241,.7)':'rgba(248,113,113,.6)'),borderRadius:5,borderWidth:0,order:2},{label:'Trend',data:trendData,type:'line',borderColor:'rgba(251,191,36,.9)',backgroundColor:'transparent',tension:.4,borderWidth:2,pointRadius:4,order:1}]},options:{...bOpts()}});
+}
+function buildTrend(a){
+  const bm={};a.forEach(x=>{const k=(x.month||'')+'_'+(x.year||2026);if(!bm[k])bm[k]={m:x.month||'?',yr:x.year||2026,s:[]};bm[k].s.push(x.score);});
+  const sorted=Object.values(bm).sort((a,b)=>a.yr!==b.yr?a.yr-b.yr:MONTHS.indexOf(a.m)-MONTHS.indexOf(b.m));
+  const labels=sorted.map(d=>d.m.slice(0,3)+' '+d.yr);
+  const data=sorted.map(d=>Math.round(d.s.reduce((s,v)=>s+v,0)/d.s.length));
+  const ctx=$('ch-trend')?.getContext('2d');if(!ctx)return;
+  charts.trend=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Avg Quality %',data,backgroundColor:data.map(v=>v>=85?'rgba(99,102,241,.7)':'rgba(248,113,113,.6)'),borderRadius:5,borderWidth:0}]},options:{...bOpts(),plugins:{...bOpts().plugins,legend:{display:false}}}});
+}
+function buildDonut(a){
+  const pass=a.filter(x=>x.status==='PASS').length,fail=a.filter(x=>x.status==='FAIL'&&!x.hasFatal).length,fatal=a.filter(x=>x.hasFatal).length;
+  const ctx=$('ch-donut')?.getContext('2d');if(!ctx)return;
+  charts.donut=new Chart(ctx,{type:'doughnut',data:{labels:['PASS','FAIL','FATAL'],datasets:[{data:[pass,fail,fatal],backgroundColor:['rgba(52,211,153,.75)','rgba(248,113,113,.75)','rgba(251,63,30,.75)'],borderColor:['#34d399','#f87171','#ff6b47'],borderWidth:2,hoverOffset:8}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'bottom',labels:{color:CC.t,font:{size:11,weight:'bold'},boxWidth:12,padding:10}},tooltip:CC.tip}}});
+}
+function buildAgentLine(a){
+  const m={};a.forEach(x=>{if(!x.agentName)return;if(!m[x.agentName])m[x.agentName]=[];m[x.agentName].push(x.score);});
+  const top=Object.entries(m).map(([n,s])=>({n,avg:Math.round(s.reduce((a,v)=>a+v,0)/s.length)})).sort((a,b)=>b.avg-a.avg).slice(0,10);
+  const ctx=$('ch-agent')?.getContext('2d');if(!ctx)return;
+  charts.agent=new Chart(ctx,{type:'line',data:{labels:top.map(x=>x.n.split(' ')[0]),datasets:[{label:'Avg Score %',data:top.map(x=>x.avg),borderColor:'rgba(99,102,241,1)',backgroundColor:'rgba(99,102,241,.1)',tension:.4,fill:true,pointBackgroundColor:top.map(x=>x.avg>=85?'#34d399':'#f87171'),pointRadius:5,borderWidth:2}]},options:{...bOpts(),plugins:{...bOpts().plugins,legend:{display:false}}}});
+}
+function buildTeam(a){
+  const m={};a.forEach(x=>{if(!x.team)return;if(!m[x.team])m[x.team]=[];m[x.team].push(x.score);});
+  const t=Object.entries(m).map(([t,s])=>({t,avg:Math.round(s.reduce((a,v)=>a+v,0)/s.length)})).sort((a,b)=>b.avg-a.avg);
+  const ctx=$('ch-team')?.getContext('2d');if(!ctx)return;
+  const cols=['rgba(99,102,241,.75)','rgba(129,140,248,.75)','rgba(52,211,153,.75)','rgba(251,191,36,.75)','rgba(248,113,113,.75)','rgba(167,139,250,.75)','rgba(34,211,238,.75)','rgba(249,115,22,.75)'];
+  charts.team=new Chart(ctx,{type:'bar',data:{labels:t.map(x=>x.t),datasets:[{label:'Avg %',data:t.map(x=>x.avg),backgroundColor:t.map((_,i)=>cols[i%cols.length]),borderRadius:5,borderWidth:0}]},options:{...bOpts(),plugins:{...bOpts().plugins,legend:{display:false}}}});
+}
+function buildRadar(a){
+  const teams=[...new Set(a.map(x=>x.team).filter(Boolean))];
+  const ctx=$('ch-radar')?.getContext('2d');if(!ctx)return;
+  const pal=['rgba(99,102,241,.7)','rgba(52,211,153,.7)','rgba(248,113,113,.7)','rgba(251,191,36,.7)','rgba(167,139,250,.7)','rgba(34,211,238,.7)','rgba(249,115,22,.7)','rgba(236,72,153,.7)'];
+  charts.radar=new Chart(ctx,{type:'radar',data:{labels:['Avg Quality%','Pass%','Fail%','Fatal%'],datasets:teams.map((t,i)=>{const ta=a.filter(x=>x.team===t),tot=ta.length||1;return{label:t,data:[Math.round(ta.reduce((s,x)=>s+(x.score||0),0)/tot),Math.round(ta.filter(x=>x.status==='PASS').length/tot*100),Math.round(ta.filter(x=>x.status==='FAIL'&&!x.hasFatal).length/tot*100),Math.round(ta.filter(x=>x.hasFatal).length/tot*100)],borderColor:pal[i%pal.length],backgroundColor:pal[i%pal.length].replace('.7','.12'),borderWidth:2,pointBackgroundColor:pal[i%pal.length]};})},options:{responsive:true,maintainAspectRatio:false,scales:{r:{grid:{color:CC.g},ticks:{color:CC.t,font:TFS,backdropColor:'transparent'},pointLabels:{color:CC.t,font:{size:11,weight:'bold'}},min:0,max:100}},plugins:{legend:{labels:{color:CC.t,font:{size:10},boxWidth:10}},tooltip:CC.tip}}});
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ISSUE 1 FIX: FE User vs FE User chart
+// SPEC REQUIREMENTS:
+//  • responsive: false, maintainAspectRatio: false (NO auto-compression)
+//  • width = max(containerWidth, numUsers × 40px) — recalculated EVERY render
+//  • overflow-x: auto (already on wrapper)
+//  • barThickness: 8–12
+//  • categoryPercentage: 0.6, barPercentage: 0.7
+//  • DESTROY old chart before recreating (on filter change AND initial render)
+//  • NEVER mutate existing chart
+// ═══════════════════════════════════════════════════════════════
+function buildFEUserBar(a){
+  // Always destroy existing chart instance first
+  if(charts.podBar){try{charts.podBar.destroy();}catch{}delete charts.podBar;}
+
+  const wrap=$('ch-podbar-wrap');
+  if(!wrap)return;
+
+  // Remove ALL existing canvases from the wrap and create a brand new one.
+  // We anchor to the wrap (not the canvas) so we never lose our reference
+  // when destroyCharts() wipes the charts{} registry between renders.
+  wrap.querySelectorAll('canvas').forEach(c=>c.remove());
+  const newCanvas=document.createElement('canvas');
+  newCanvas.id='ch-podbar';
+  wrap.appendChild(newCanvas);
+
+  const feMap={},feTeamMap={};
+  localEmps.forEach(e=>{if(e.feUser&&e.name){feMap[e.name]=e.feUser;feTeamMap[e.name]=e.team;}});
+
+  const m={};
+  a.forEach(x=>{
+    if(!x.agentName)return;
+    if(feTeamFilter){const et=feTeamMap[x.agentName]||x.team||'';if(et.trim()!==feTeamFilter.trim())return;}
+    const fe=feMap[x.agentName]||x.agentName;
+    if(!m[fe])m[fe]={scores:[],pass:0,fail:0,fatal:0,total:0};
+    m[fe].scores.push(x.score||0);m[fe].total++;
+    if(x.hasFatal)m[fe].fatal++;else if(x.status==='PASS')m[fe].pass++;else m[fe].fail++;
+  });
+
+  const feUsers=Object.keys(m).sort();
+  const countEl=$('fe-user-count');
+  if(countEl)countEl.textContent=feUsers.length+' user'+(feUsers.length!==1?'s':'')+(feTeamFilter?' in '+feTeamFilter:'');
+
+  const pxPerUser=feUsers.length<=8?110:feUsers.length<=20?90:70;
+  const outerWidth=wrap.parentElement?.offsetWidth||600;
+  const canvasWidth=feUsers.length?Math.max(outerWidth,feUsers.length*40,feUsers.length*pxPerUser):outerWidth;
+  const canvasHeight=300;
+
+  // Set explicit pixel dimensions on the canvas BEFORE Chart.js initialises.
+  // This is what prevents Chart.js from auto-squashing to the container width.
+  newCanvas.width=canvasWidth;
+  newCanvas.height=canvasHeight;
+  newCanvas.style.width=canvasWidth+'px';
+  newCanvas.style.height=canvasHeight+'px';
+  wrap.style.width=canvasWidth+'px';
+  wrap.style.minWidth=canvasWidth+'px';
+
+  const ctx=newCanvas.getContext('2d');
+
+  if(!feUsers.length){
+    charts.podBar=new Chart(ctx,{type:'bar',data:{labels:['No data'],datasets:[{label:'Quality%',data:[0],backgroundColor:'rgba(99,102,241,.2)'}]},options:{responsive:false,maintainAspectRatio:false,plugins:{legend:{display:false}}}});
+    return;
+  }
+
+  const stats=feUsers.map(fe=>{
+    const d=m[fe],tot=d.total||1;
+    return{fe,q:Math.round(d.scores.reduce((s,v)=>s+v,0)/d.scores.length),p:Math.round(d.pass/tot*100),f:Math.round(d.fail/tot*100),ft:Math.round(d.fatal/tot*100)};
+  });
+  const getAlias=fe=>{const p=fe.split(' - ');return p.length>1?p[1].trim():fe.split(' ')[0];};
+  const barThk=feUsers.length<=6?12:feUsers.length<=14?10:8;
+
+  charts.podBar=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:stats.map(s=>getAlias(s.fe)),
+      datasets:[
+        {label:'Quality%',data:stats.map(s=>s.q),backgroundColor:CHART_COLORS.quality.bg,borderColor:CHART_COLORS.quality.border,borderWidth:1,borderRadius:3,barThickness:barThk},
+        {label:'Pass%',  data:stats.map(s=>s.p),backgroundColor:CHART_COLORS.pass.bg,   borderColor:CHART_COLORS.pass.border,   borderWidth:1,borderRadius:3,barThickness:barThk},
+        {label:'Fail%',  data:stats.map(s=>s.f),backgroundColor:CHART_COLORS.fail.bg,   borderColor:CHART_COLORS.fail.border,   borderWidth:1,borderRadius:3,barThickness:barThk},
+        {label:'Fatal%', data:stats.map(s=>s.ft),backgroundColor:CHART_COLORS.fatal.bg,  borderColor:CHART_COLORS.fatal.border,  borderWidth:1,borderRadius:3,barThickness:barThk},
+      ]
+    },
+    options:{
+      responsive:false,
+      maintainAspectRatio:false,
+      categoryPercentage:0.6,
+      barPercentage:0.7,
+      plugins:{
+        legend:{position:'top',align:'start',labels:{color:CC.t,font:{size:10},boxWidth:10,boxHeight:10,padding:14}},
+        tooltip:{...CC.tip,callbacks:{title:ctx2=>stats[ctx2[0].dataIndex]?.fe||ctx2[0].label,label:ctx2=>`${ctx2.dataset.label}: ${ctx2.parsed.y}%`}}
+      },
+      scales:{
+        x:{grid:{color:'rgba(99,102,241,.06)'},ticks:{color:CC.t,font:{size:10,weight:'bold'},maxRotation:45,minRotation:45,autoSkip:false},offset:true},
+        y:{grid:{color:CC.g},ticks:{color:CC.t,font:{size:11,weight:'bold'},callback:v=>v+'%'},min:0,max:100,title:{display:true,text:'Avg %',color:CC.t,font:{size:10,weight:'bold'}}}
+      },
+      layout:{padding:{top:4,bottom:8,left:4,right:8}}
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ISSUE 2 FIX: Call Criteria by POD — spacing fix
+// SPEC REQUIREMENTS:
+//  • barThickness: 10–12
+//  • categoryPercentage: 0.45, barPercentage: 0.5
+//  • maxBarThickness: 14–16 (prevents stretching)
+//  • overflow-x: auto (on wrapper)
+//  • dynamic width: max(containerWidth, numPods × 80px)
+//  • fixed height 320px — DO NOT CHANGE
+// ═══════════════════════════════════════════════════════════════
+function buildCallCriteriaBar(a){
+  if(charts.callCriteria){try{charts.callCriteria.destroy();}catch{}delete charts.callCriteria;}
+  const ctx=$('ch-call-criteria')?.getContext('2d');if(!ctx)return;
+
+  const teams=[...new Set(a.map(x=>x.team).filter(Boolean))].sort();
+  if(!teams.length)return;
+
+  // SPEC: dynamic width for POD chart
+  const wrapEl=$('ch-call-criteria-wrap');
+  const innerEl=$('ch-call-criteria-inner');
+  const containerWidth=wrapEl?.offsetWidth||600;
+  // SPEC: width = max(containerWidth, numPods × 80px)
+  const podWidth=Math.max(containerWidth,teams.length*80);
+  if(innerEl){innerEl.style.width=podWidth+'px';innerEl.style.minWidth=podWidth+'px';}
+
+  function getCatAvgs(teamAudits){
+    const ct={};SC_CATS.forEach(c=>ct[c]={sum:0,cnt:0});
+    teamAudits.forEach(audit=>{
+      if(audit.hasFatal){SC_CATS.forEach(c=>{ct[c].sum+=0;ct[c].cnt+=1;});return;}
+      if(audit.selections&&Object.keys(audit.selections).length>0){
+        const ce={},cm={};SC_CATS.forEach(c=>{ce[c]=0;cm[c]=0;});
+        SC.forEach((p,idx)=>{const sel=audit.selections[idx];if(!sel||sel==='NA')return;cm[p.cat]+=p.r;if(sel==='YES')ce[p.cat]+=p.r;});
+        SC_CATS.forEach(c=>{if(cm[c]>0){ct[c].sum+=(ce[c]/cm[c])*100;ct[c].cnt+=1;}});
+      } else {
+        const seed=audit.id?audit.id.split('').reduce((acc,ch)=>acc+ch.charCodeAt(0),0):42;
+        const rng=seededRandom(seed);
+        SC_CATS.forEach(c=>{const v=(rng()-0.5)*14;ct[c].sum+=Math.min(100,Math.max(0,(audit.score||0)+v));ct[c].cnt+=1;});
+      }
+    });
+    const r={};SC_CATS.forEach(c=>{r[c]=ct[c].cnt>0?Math.round(ct[c].sum/ct[c].cnt):0;});return r;
+  }
+
+  const teamStats=teams.map(team=>({team,cats:getCatAvgs(a.filter(x=>x.team===team))}));
+  const catColorMap={'Call Execution':CHART_COLORS.quality,'Location/Records':CHART_COLORS.pass,'Documentation':CHART_COLORS.fail,'Progress':CHART_COLORS.fatal};
+
+  // SPEC: barThickness 10–12, maxBarThickness 14–16
+  const barThk=teams.length<=5?12:teams.length<=8?11:10;
+  const maxThk=teams.length<=5?16:14;
+
+  const targetLinePlugin={
+    id:'targetLine90',
+    afterDraw(chart){
+      const{ctx:c,chartArea:{left,right},scales:{y}}=chart;if(!y)return;
+      const yPos=y.getPixelForValue(90);
+      c.save();c.beginPath();c.setLineDash([6,4]);c.strokeStyle='rgba(251,191,36,0.65)';c.lineWidth=2;c.moveTo(left,yPos);c.lineTo(right,yPos);c.stroke();
+      c.setLineDash([]);c.fillStyle='rgba(251,191,36,0.9)';c.font='bold 10px DM Sans,sans-serif';c.textAlign='right';c.fillText('Target 90%',right-4,yPos-5);c.restore();
+    }
+  };
+
+  charts.callCriteria=new Chart(ctx,{
+    type:'bar',
+    data:{labels:teamStats.map(ts=>ts.team),datasets:SC_CATS.map(cat=>({
+      label:cat,data:teamStats.map(ts=>ts.cats[cat]),
+      backgroundColor:catColorMap[cat].bg,borderColor:catColorMap[cat].border,
+      borderWidth:1,borderRadius:4,
+      // SPEC: barThickness 10-12, maxBarThickness 14-16
+      barThickness:barThk,
+      maxBarThickness:maxThk,
+    }))},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      // SPEC: categoryPercentage:0.45, barPercentage:0.5 — clear spacing between POD groups
+      categoryPercentage:0.45,
+      barPercentage:0.5,
+      plugins:{
+        legend:{position:'top',align:'start',labels:{color:CC.t,font:{size:10},boxWidth:10,boxHeight:10,padding:14}},
+        tooltip:{...CC.tip,callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y}%`}},
+        datalabels:{display:false}
+      },
+      scales:{
+        x:{grid:{color:'rgba(99,102,241,.06)'},ticks:{color:CC.t,font:{size:11,weight:'bold'}},title:{display:true,text:'POD / Team',color:CC.t,font:{size:10,weight:'bold'}}},
+        y:{grid:{color:CC.g},ticks:{color:CC.t,font:{size:11,weight:'bold'},callback:v=>v+'%'},min:0,max:100,title:{display:true,text:'Average %',color:CC.t,font:{size:10,weight:'bold'}}}
+      },
+      layout:{padding:{top:8,right:12,bottom:4,left:4}}
+    },
+    plugins:[targetLinePlugin,...(typeof ChartDataLabels!=='undefined'?[ChartDataLabels]:[])]
+  });
+}
+
+function buildHmMonthSelect(){
+  const now=new Date();let opts='';
+  for(let i=0;i<6;i++){const d=new Date(now.getFullYear(),now.getMonth()-i,1);const val=d.getFullYear()+'-'+(d.getMonth()+1);const label=MONTHS[d.getMonth()].slice(0,3)+' '+d.getFullYear();opts+=`<option value="${val}"${i===0?' selected':''}>${label}</option>`;}
+  $('hm-month').innerHTML=opts;
+}
+function renderHeatmap(){
+  const val=$('hm-month').value.split('-');const yr=+val[0],mo=+val[1]-1;const now=new Date();
+  const firstDay=new Date(yr,mo,1).getDay(),lastDate=new Date(yr,mo+1,0).getDate();
+  let elapsed;if(yr===now.getFullYear()&&mo===now.getMonth())elapsed=now.getDate();else if(new Date(yr,mo,1)>now)elapsed=0;else elapsed=lastDate;
+  const elEl=$('hm-elapsed-text');if(elEl)elEl.textContent=`${elapsed} day${elapsed!==1?'s':''} elapsed of ${lastDate}`;
+  const dls=['Su','Mo','Tu','We','Th','Fr','Sa'];
+  $('hm-day-labels').innerHTML=dls.map(d=>`<div class="hm-day-label">${d}</div>`).join('');
+  const cells=[];
+  for(let i=0;i<firstDay;i++)cells.push(`<div class="hm-cell empty"></div>`);
+  for(let d=1;d<=lastDate;d++){
+    const date=new Date(yr,mo,d);const isToday=(yr===now.getFullYear()&&mo===now.getMonth()&&d===now.getDate());const isFuture=date>now;const isWknd=date.getDay()===0||date.getDay()===6;
+    let cls='hm-cell',title='';
+    if(isFuture||isWknd){cls+=' future';title=isWknd?'Weekend':'Future';}
+    else{const count=allAudits.filter(a=>{const ad=new Date(a.date);return ad.getFullYear()===yr&&ad.getMonth()===mo&&ad.getDate()===d;}).length;if(count>0){cls+=' audited';title=`${count} audit${count>1?'s':''}`;}else{cls+=' not-audited';title='No audits';}}
+    if(isToday)cls+=' today';
+    cells.push(`<div class="${cls}" title="${d} — ${title}">${d}</div>`);
+  }
+  $('hm-grid').innerHTML=cells.join('');
+}
+
+function renderSumTop(){
+  const today=new Date().toDateString();
+  $('st-today').textContent=filteredAudits.filter(x=>new Date(x.date).toDateString()===today).length;
+  $('st-avg').textContent=(filteredAudits.length?Math.round(filteredAudits.reduce((s,x)=>s+(x.score||0),0)/filteredAudits.length):0)+'%';
+  const tm={};filteredAudits.forEach(x=>{if(!x.team)return;if(!tm[x.team])tm[x.team]=new Set();tm[x.team].add(x.agentName);});
+  $('st-teams').innerHTML=Object.entries(tm).map(([t,s])=>`<div style="display:flex;justify-content:space-between"><span style="color:var(--acc2)">${t}</span><span>${s.size}a</span></div>`).join('');
+}
+function renderSumTable(){
+  const q=$('sum-q').value.toLowerCase(),sf=$('sum-status').value;
+  let d=filteredAudits.filter(x=>{if(sf&&x.status!==sf)return false;if(q&&!x.agentName.toLowerCase().includes(q)&&!x.orderId.toLowerCase().includes(q))return false;return true;});
+  $('sum-count').textContent=d.length+' records';
+  $('sum-tbl').innerHTML=d.length?d.map((x,i)=>`<tr><td style="color:var(--mut)">${i+1}</td><td>${x.agentName}</td><td>${x.team}</td><td>${x.supervisor}</td><td>${x.sme}</td><td style="font-family:'Space Mono',monospace;font-size:.77rem">${x.orderId}</td><td style="font-weight:600;color:${x.score>=85?'var(--ok)':'var(--bad)'}">${x.score}%</td><td><span class="badge badge-${x.status.toLowerCase()}">${x.status}${x.hasFatal?' ⚡':''}</span></td><td>${x.auditorName}</td><td style="color:var(--mut);font-size:.77rem">${fmt(x.date)}</td></tr>`).join(''):'<tr><td colspan="10" style="text-align:center;color:var(--mut);padding:30px">No audits found</td></tr>';
+}
+
+function renderAdmTable(){
+  const q=(($('adm-q')||{}).value||'').toLowerCase();
+  let d=allAudits.filter(x=>!q||x.agentName.toLowerCase().includes(q)||x.orderId.toLowerCase().includes(q));
+  $('adm-tbl').innerHTML=d.length?d.map((x,i)=>`<tr><td><input type="checkbox" class="audit-chk" data-id="${x.id}" onchange="updSelCnt()" style="accent-color:var(--acc)"/></td><td style="color:var(--mut)">${i+1}</td><td>${x.agentName}</td><td>${x.team}</td><td style="font-family:'Space Mono',monospace;font-size:.77rem">${x.orderId}</td><td style="font-weight:600;color:${x.score>=85?'var(--ok)':'var(--bad)'}">${x.score}%</td><td><span class="badge badge-${x.status.toLowerCase()}">${x.status}</span></td><td>${x.auditorName}</td><td style="color:var(--mut);font-size:.77rem">${fmt(x.date)}</td><td style="display:flex;gap:5px"><button class="tp-btn tp-btn-sm tp-btn-outline" onclick="openEd('${x.id}')">✏</button><button class="tp-btn tp-btn-sm tp-btn-danger" onclick="delAudit('${x.id}')">🗑</button></td></tr>`).join(''):'<tr><td colspan="10" style="text-align:center;color:var(--mut);padding:20px">No audits</td></tr>';
+}
+function renderAdmEmpTable(){
+  $('adm-emp-tbl').innerHTML=localEmps.map(e=>`<tr><td><input type="checkbox" class="emp-chk" data-id="${e.id}" onchange="updEmpSelCnt()" style="accent-color:var(--acc)"/></td><td>${e.empId}</td><td>${e.name}</td><td>${e.team}</td><td>${e.teamLeader}</td><td>${e.sme}</td><td>${e.email}</td><td style="display:flex;gap:5px"><button class="tp-btn tp-btn-sm tp-btn-outline" onclick="openEdEmp('${e.id}')">✏</button><button class="tp-btn tp-btn-sm tp-btn-danger" onclick="delEmp('${e.id}')">🗑</button></td></tr>`).join('');
+}
+function togAllAudits(cb){document.querySelectorAll('.audit-chk').forEach(c=>c.checked=cb.checked);updSelCnt();}
+function updSelCnt(){const s=document.querySelectorAll('.audit-chk:checked');$('del-sel-btn').style.display=s.length?'inline-flex':'none';$('sel-cnt').textContent=s.length;}
+function delSelAudits(){const ids=[...document.querySelectorAll('.audit-chk:checked')].map(c=>c.dataset.id);if(!ids.length||!confirm(`Delete ${ids.length} audit(s)?`))return;let a=lsGet(auditKey(CU.email),[]).filter(x=>!ids.includes(x.id));lsSet(auditKey(CU.email),a);toast(`Deleted ${ids.length}`);loadAudits();renderAdmTable();}
+function delAudit(id){if(!confirm('Delete?'))return;let a=lsGet(auditKey(CU.email),[]).filter(x=>x.id!==id);lsSet(auditKey(CU.email),a);toast('Deleted');loadAudits();renderAdmTable();}
+function clearAllAudits(){if(!confirm('Clear ALL?'))return;lsSet(auditKey(CU.email),[]);toast('Cleared');loadAudits();renderAdmTable();}
+function togAllEmps(cb){document.querySelectorAll('.emp-chk').forEach(c=>c.checked=cb.checked);updEmpSelCnt();}
+function updEmpSelCnt(){const s=document.querySelectorAll('.emp-chk:checked');$('del-emp-btn').style.display=s.length?'inline-flex':'none';$('emp-sel-cnt').textContent=s.length;}
+function delSelEmps(){const ids=[...document.querySelectorAll('.emp-chk:checked')].map(c=>c.dataset.id);if(!ids.length||!confirm(`Delete ${ids.length} emp(s)?`))return;localEmps=localEmps.filter(e=>!ids.includes(e.id));lsSet(empKey(CU.email),localEmps);toast(`Deleted ${ids.length}`);populateAuditDrop();renderEmpTable();renderAdmEmpTable();}
+function delEmp(id){if(!confirm('Delete?'))return;localEmps=localEmps.filter(e=>e.id!==id);lsSet(empKey(CU.email),localEmps);toast('Deleted');populateAuditDrop();renderEmpTable();renderAdmEmpTable();}
+function openEd(id){const x=allAudits.find(a=>a.id===id);if(!x)return;editAuditId=id;$('ed-ag').value=x.agentName;$('ed-ord').value=x.orderId;$('ed-tm').value=x.team;$('ed-sc').value=x.score;$('ed-st').value=x.status;$('ed-modal').style.display='flex';}
+function saveAuditEdit(){let a=lsGet(auditKey(CU.email),[]),i=a.findIndex(x=>x.id===editAuditId);if(i===-1)return;const sc=parseInt($('ed-sc').value)||0;a[i]={...a[i],agentName:$('ed-ag').value,orderId:$('ed-ord').value,team:$('ed-tm').value,score:sc,status:sc>=85?'PASS':'FAIL'};lsSet(auditKey(CU.email),a);closeM('ed-modal');toast('Updated');loadAudits();renderAdmTable();}
+function openEdEmp(id){const e=localEmps.find(x=>x.id===id);if(!e)return;editEmpId=id;$('ee-nm').value=e.name;$('ee-tm').value=e.team;$('ee-tl').value=e.teamLeader;$('ee-sme').value=e.sme;$('ee-em').value=e.email;$('ed-emp-modal').style.display='flex';}
+function saveEmpEdit(){const i=localEmps.findIndex(e=>e.id===editEmpId);if(i===-1)return;localEmps[i]={...localEmps[i],name:$('ee-nm').value,team:$('ee-tm').value,teamLeader:$('ee-tl').value,sme:$('ee-sme').value,email:$('ee-em').value};lsSet(empKey(CU.email),localEmps);closeM('ed-emp-modal');toast('Updated');renderEmpTable();renderAdmEmpTable();populateAuditDrop();}
+function closeM(id){$(id).style.display='none';editAuditId=null;editEmpId=null;}
+document.addEventListener('click',e=>{if(e.target.id==='ed-modal')closeM('ed-modal');if(e.target.id==='ed-emp-modal')closeM('ed-emp-modal');});
+
+function exportCSV(){
+  const d=filteredAudits.length?filteredAudits:allAudits;if(!d.length){toast('No data','warn');return;}
+  const paramCols=SC.map(p=>p.p);
+  const hdr=['#','Agent','Team','Supervisor','SME','Order ID',...paramCols,'Score','Status','Auditor','Date'];
+  const rows=d.map((x,i)=>{
+    const paramVals=SC.map((_,idx)=>{const v=(x.selections&&x.selections[String(idx)])||'';return v;});
+    return[i+1,x.agentName,x.team,x.supervisor,x.sme,x.orderId,...paramVals,x.score+'%',x.status+(x.hasFatal?' FATAL':''),x.auditorName,fmt(x.date)];
+  });
+  const csv=[hdr,...rows].map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='TeamPulse_'+new Date().toISOString().slice(0,10)+'.csv';a.click();toast('Exported '+d.length+' records');
+}
+
+let chatOpen=false;
+function toggleChat(){chatOpen=!chatOpen;$('chat-win').classList.toggle('open',chatOpen);if(chatOpen)$('chat-inp').focus();}
+function qChat(t){$('chat-inp').value=t;sendChat();}
+function buildDataSummary(){
+  const a=allAudits;if(!a.length)return null;
+  const tot=a.length,pass=a.filter(x=>x.status==='PASS').length,fail=a.filter(x=>x.status==='FAIL'&&!x.hasFatal).length,fatal=a.filter(x=>x.hasFatal).length;
+  const avg=Math.round(a.reduce((s,x)=>s+(x.score||0),0)/tot);
+  const m={};a.forEach(x=>{if(!x.agentName)return;if(!m[x.agentName])m[x.agentName]={s:[],t:x.team};m[x.agentName].s.push(x.score);});
+  const agents=Object.entries(m).map(([n,d])=>({n,t:d.t,avg:Math.round(d.s.reduce((a,v)=>a+v,0)/d.s.length),cnt:d.s.length})).sort((a,b)=>b.avg-a.avg);
+  const tm={};a.forEach(x=>{if(!x.team)return;if(!tm[x.team])tm[x.team]=[];tm[x.team].push(x.score);});
+  const teams=Object.entries(tm).map(([t,s])=>({t,avg:Math.round(s.reduce((a,v)=>a+v,0)/s.length),cnt:s.length})).sort((a,b)=>b.avg-a.avg);
+  return{tot,pass,fail,fatal,avg,passRate:Math.round(pass/tot*100),failRate:Math.round((fail+fatal)/tot*100),agents,teams,top:agents[0],bottom:agents[agents.length-1],below85:agents.filter(x=>x.avg<85)};
+}
+function answerLocally(q){
+  const d=buildDataSummary();if(!d)return"No audit data yet.";
+  const lq=q.toLowerCase();
+  const opM=lq.match(/(?:reduce|set|change)\s+(?:transparency|opacity)\s+to\s+(\d+)%/i);
+  if(opM){const pct=+opM[1];const op=pct/100;$('chat-win').style.opacity=op;$('chat-op').value=op<=0.3?'0.3':op<=0.5?'0.5':op<=0.8?'0.8':op<=0.9?'0.9':'1';return`Opacity set to ${pct}% ✓`;}
+  if(lq.includes('top performer')||lq.includes('best agent'))return`🥇 Top performer: ${d.top.n} (${d.top.t}) with avg ${d.top.avg}% across ${d.top.cnt} audits.`;
+  if(lq.includes('below 85')||lq.includes('underperform'))return d.below85.length?`⚠️ ${d.below85.length} agents below 85%:\n${d.below85.map(x=>`• ${x.n} (${x.t}): ${x.avg}%`).join('\n')}`:'✅ All agents above 85%!';
+  if(lq.includes('pass rate'))return`✅ Pass rate: ${d.passRate}% (${d.pass}/${d.tot}). Fail/Fatal: ${d.failRate}%.`;
+  if(lq.includes('fail')||lq.includes('fatal'))return`❌ Failed: ${d.fail} | ⚡ Fatal: ${d.fatal} | Fail rate: ${d.failRate}%.`;
+  if(lq.includes('average')||lq.includes('avg'))return`📊 Overall avg: ${d.avg}% across ${d.tot} audits.`;
+  if(lq.includes('team')||lq.includes('pod'))return`🏢 Team performance:\n${d.teams.slice(0,8).map((t,i)=>`${i+1}. ${t.t}: ${t.avg}% (${t.cnt})`).join('\n')}`;
+  if(lq.includes('total')||lq.includes('how many'))return`📋 Total: ${d.tot} | Pass: ${d.pass} | Fail: ${d.fail} | Fatal: ${d.fatal}`;
+  if(lq.includes('leaderboard'))return`🏆 Top 5:\n${d.agents.slice(0,5).map((a,i)=>`${['🥇','🥈','🥉','4️⃣','5️⃣'][i]} ${a.n} (${a.t}): ${a.avg}%`).join('\n')}`;
+  if(lq.includes('summar')||lq.includes('overview'))return`📊 Summary:\n• Total: ${d.tot}\n• Avg Quality: ${d.avg}%\n• Pass Rate: ${d.passRate}%\n• Top: ${d.top.n} @ ${d.top.avg}%\n• Below 85%: ${d.below85.length}`;
+  if(lq.includes('worst')||lq.includes('lowest'))return`📉 Lowest: ${d.bottom.n} (${d.bottom.t}) at ${d.bottom.avg}%.`;
+  if(lq.includes('today'))return`📅 Today: ${allAudits.filter(x=>new Date(x.date).toDateString()===new Date().toDateString()).length} audits`;
+  return`Summary:\n• Total: ${d.tot} | Avg: ${d.avg}% | Pass: ${d.passRate}%\n• Top: ${d.top.n} @ ${d.top.avg}%\n• Below 85%: ${d.below85.length}\n\nTry: "top performer", "pass rate", "below 85%", "by team"`;
+}
+function addMsg(txt,cls){const msgs=$('chat-msgs'),div=document.createElement('div');div.className='cmsg '+cls;div.textContent=txt;msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;return div;}
+function sendChat(){const inp=$('chat-inp'),text=inp.value.trim();if(!text)return;inp.value='';addMsg(text,'user');const thinking=addMsg('Thinking…','ai thinking');setTimeout(()=>{thinking.remove();addMsg(answerLocally(text),'ai');},300);}
+
+(function(){
+  const fab=$('chat-fab'),win=$('chat-win');
+  let drag=false,ox=0,oy=0,fx=window.innerWidth-80,fy=window.innerHeight-80;
+  function pos(x,y){fx=Math.max(10,Math.min(x,window.innerWidth-62));fy=Math.max(10,Math.min(y,window.innerHeight-62));fab.style.left=fx+'px';fab.style.top=fy+'px';fab.style.right='auto';fab.style.bottom='auto';win.style.left=(fx-320)+'px';win.style.top=Math.max(10,fy-500)+'px';win.style.right='auto';win.style.bottom='auto';}
+  fab.addEventListener('mousedown',e=>{drag=true;ox=e.clientX-fx;oy=e.clientY-fy;e.preventDefault();});
+  document.addEventListener('mousemove',e=>{if(drag)pos(e.clientX-ox,e.clientY-oy);});
+  document.addEventListener('mouseup',()=>drag=false);
+  fab.addEventListener('click',()=>{if(!drag)toggleChat();});
+})();
+
+document.addEventListener('input',e=>{
+  if(e.target.id==='adm-q')renderAdmTable();
+  if(e.target.id==='emp-search')renderEmpTable();
+  if(e.target.id==='sum-q')renderSumTable();
+});
+
+// ═══════════════ EMAILJS ══════════════════════════════════════════
+(function(){
+  if(typeof emailjs!=='undefined'){
+    emailjs.init('TAnMQJ2SlFM01PmEV');
+  }
+})();
+
+function buildScorecardEmailTable(sel){
+  const EJSC_ORDER=['Call Execution','Location/Records','Documentation','Progress'];
+  let rows='';
+  let lastCat='';
+  SC.forEach((p,i)=>{
+    const v=sel[String(i)]||'—';
+    const color=v==='YES'?'#34d399':v==='NO'?'#f87171':v==='FATAL'?'#ff6b47':v==='NA'?'#94a3b8':'#e2e8f0';
+    if(p.cat!==lastCat){
+      rows+=`<tr><td colspan="3" style="background:#1a2035;color:#818cf8;font-weight:700;font-size:12px;padding:8px 12px;text-transform:uppercase;letter-spacing:0.05em;">${p.cat}</td></tr>`;
+      lastCat=p.cat;
+    }
+    rows+=`<tr style="border-bottom:1px solid rgba(99,102,241,0.1);">
+      <td style="padding:7px 12px;font-size:13px;color:#e2e8f0;">${p.p}</td>
+      <td style="padding:7px 12px;font-size:12px;color:#64748b;text-align:center;">${p.r} pts</td>
+      <td style="padding:7px 12px;font-size:12px;font-weight:700;text-align:center;color:${color};">${v}</td>
+    </tr>`;
+  });
+  return rows;
+}
+
+function sendAuditEmail(audit, emp, sel, toEmail){
+  if(typeof emailjs==='undefined'){toast('EmailJS not loaded','bad');return;}
+
+  const dateStr=new Date(audit.date).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const statusColor=audit.status==='PASS'?'#34d399':'#f87171';
+  const statusBg=audit.status==='PASS'?'rgba(52,211,153,0.15)':'rgba(248,113,113,0.15)';
+  const scorecardRows=buildScorecardEmailTable(sel);
+  const fatalNote=audit.hasFatal?'<tr><td colspan="3" style="background:rgba(255,107,71,0.15);color:#ff6b47;font-weight:700;padding:10px 12px;text-align:center;font-size:13px;">⚡ FATAL — Automatic score: 0%</td></tr>':'';
+
+  const htmlReport=`<!DOCTYPE html><html><head><meta charset="UTF-8"/></head><body style="margin:0;padding:0;background:#080C17;font-family:'Segoe UI',Arial,sans-serif;">
+<div style="max-width:620px;margin:0 auto;background:#080C17;padding:24px;">
+  <!-- Header -->
+  <div style="background:linear-gradient(135deg,#6366f1,#818cf8);border-radius:14px;padding:24px 28px;margin-bottom:20px;text-align:center;">
+    <div style="font-size:22px;font-weight:700;color:#fff;letter-spacing:0.02em;">TeamPulse</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.8);margin-top:4px;">Quality Audit Report</div>
+  </div>
+
+  <!-- Employee Details Header -->
+  <div style="background:#0F1525;border:1px solid rgba(99,102,241,0.2);border-radius:12px;padding:20px 24px;margin-bottom:16px;">
+    <div style="font-size:13px;font-weight:700;color:#818cf8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:14px;">📋 Audit Details</div>
+    <table style="width:100%;border-collapse:collapse;">
+      <tr><td style="padding:5px 0;font-size:13px;color:#64748b;width:140px;">Employee</td><td style="padding:5px 0;font-size:13px;font-weight:600;color:#e2e8f0;">${audit.agentName}</td></tr>
+      <tr><td style="padding:5px 0;font-size:13px;color:#64748b;">Order ID</td><td style="padding:5px 0;font-size:13px;font-weight:600;color:#e2e8f0;font-family:monospace;">${audit.orderId}</td></tr>
+      <tr><td style="padding:5px 0;font-size:13px;color:#64748b;">Team</td><td style="padding:5px 0;font-size:13px;color:#e2e8f0;">${audit.team}</td></tr>
+      <tr><td style="padding:5px 0;font-size:13px;color:#64748b;">Supervisor</td><td style="padding:5px 0;font-size:13px;color:#e2e8f0;">${audit.supervisor||'—'}</td></tr>
+      <tr><td style="padding:5px 0;font-size:13px;color:#64748b;">SME</td><td style="padding:5px 0;font-size:13px;color:#e2e8f0;">${audit.sme||'—'}</td></tr>
+      <tr><td style="padding:5px 0;font-size:13px;color:#64748b;">Audited By</td><td style="padding:5px 0;font-size:13px;color:#e2e8f0;">${audit.auditorName}</td></tr>
+      <tr><td style="padding:5px 0;font-size:13px;color:#64748b;">Date</td><td style="padding:5px 0;font-size:13px;color:#e2e8f0;">${dateStr}</td></tr>
+    </table>
+  </div>
+
+  <!-- Scorecard -->
+  <div style="background:#0F1525;border:1px solid rgba(99,102,241,0.2);border-radius:12px;overflow:hidden;margin-bottom:16px;">
+    <div style="padding:16px 24px;border-bottom:1px solid rgba(99,102,241,0.15);">
+      <span style="font-size:13px;font-weight:700;color:#818cf8;text-transform:uppercase;letter-spacing:0.06em;">📊 Quality Scorecard</span>
+    </div>
+    <table style="width:100%;border-collapse:collapse;">
+      <thead><tr style="background:rgba(99,102,241,0.12);">
+        <th style="padding:9px 12px;text-align:left;font-size:12px;color:#818cf8;font-weight:600;">Parameter</th>
+        <th style="padding:9px 12px;text-align:center;font-size:12px;color:#818cf8;font-weight:600;">Range</th>
+        <th style="padding:9px 12px;text-align:center;font-size:12px;color:#818cf8;font-weight:600;">Result</th>
+      </tr></thead>
+      <tbody>${scorecardRows}${fatalNote}</tbody>
+    </table>
+  </div>
+
+  ${audit.feedback?`<!-- Feedback -->
+  <div style="background:#0F1525;border:1px solid rgba(99,102,241,0.2);border-radius:12px;padding:18px 24px;margin-bottom:16px;">
+    <div style="font-size:13px;font-weight:700;color:#818cf8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;">💬 Feedback</div>
+    <p style="font-size:13px;color:#e2e8f0;line-height:1.6;margin:0;">${audit.feedback.replace(/\n/g,'<br/>')}</p>
+  </div>`:''}
+
+  <!-- Score Summary -->
+  <div style="background:#0F1525;border:1px solid rgba(99,102,241,0.2);border-radius:12px;padding:20px 24px;text-align:center;">
+    <div style="font-size:13px;font-weight:700;color:#818cf8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:14px;">🏆 Final Result</div>
+    <div style="font-size:48px;font-weight:700;color:${statusColor};margin-bottom:8px;">${audit.score}%</div>
+    <div style="display:inline-block;background:${statusBg};color:${statusColor};border:1px solid ${statusColor};border-radius:20px;padding:5px 20px;font-size:14px;font-weight:700;">${audit.status}${audit.hasFatal?' ⚡ FATAL':''}</div>
+  </div>
+
+  <!-- Footer -->
+  <div style="text-align:center;margin-top:20px;font-size:11px;color:#475569;">
+    This is an automated quality audit report generated by TeamPulse.<br/>Please do not reply to this email.
+  </div>
+</div></body></html>`;
+
+  const plainText=`TeamPulse Quality Audit Report
+===============================
+Employee: ${audit.agentName}
+Order ID: ${audit.orderId}
+Team: ${audit.team}
+Supervisor: ${audit.supervisor||'—'}
+SME: ${audit.sme||'—'}
+Audited By: ${audit.auditorName}
+Date: ${dateStr}
+
+SCORECARD
+---------
+${SC.map((p,i)=>`${p.p} (${p.r}pts): ${sel[String(i)]||'—'}`).join('\n')}
+
+${audit.feedback?`FEEDBACK\n--------\n${audit.feedback}\n\n`:''}RESULT: ${audit.score}% — ${audit.status}${audit.hasFatal?' (FATAL)':''}`;
+
+  const templateParams={
+    to_email: toEmail,
+    to_name: audit.agentName,
+    from_name: audit.auditorName,
+    subject: `Quality Audit Report — ${audit.agentName} | ${audit.orderId} | ${audit.score}% ${audit.status}`,
+    audit_html: htmlReport,
+    audit_plain: plainText,
+    employee_name: audit.agentName,
+    order_id: audit.orderId,
+    team: audit.team,
+    supervisor: audit.supervisor||'—',
+    sme: audit.sme||'—',
+    audited_by: audit.auditorName,
+    audit_date: dateStr,
+    quality_score: audit.score+'%',
+    audit_status: audit.status+(audit.hasFatal?' (FATAL)':''),
+    feedback: audit.feedback||'No feedback provided.',
+    message: htmlReport
+  };
+
+  const btn=$('submit-audit-btn');
+  if(btn){btn.textContent='📤 Sending…';btn.disabled=true;}
+
+  emailjs.send('service_7u47kyh','template_wqfzidq',templateParams)
+    .then(()=>{
+      toast('✅ Audit saved & report emailed to '+toEmail);
+      if(btn){btn.textContent='📧 Submit Audit & Send Report';btn.disabled=false;}
+    })
+    .catch(err=>{
+      console.error('EmailJS error:',err);
+      toast('Audit saved — email failed: '+((err&&err.text)||'Check EmailJS template'),'warn');
+      if(btn){btn.textContent='📧 Submit Audit & Send Report';btn.disabled=false;}
+    });
+}
+</script>
+</body>
+</html>
