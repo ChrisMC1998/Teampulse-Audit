@@ -26,8 +26,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-
 .tp-btn-outline{background:transparent;border:1px solid var(--bdr);color:var(--acc2)}.tp-btn-outline:hover{background:rgba(99,102,241,.1);box-shadow:none;transform:none}
 .tp-btn-sm{width:auto;padding:5px 12px;font-size:.78rem;border-radius:7px}
 .tp-btn-danger{background:rgba(248,113,113,.15);color:var(--bad);border:1px solid rgba(248,113,113,.3)}.tp-btn-danger:hover{background:rgba(248,113,113,.3);transform:none}
-#auth-screen{display:flex}
-#app{display:none;min-height:100vh}
+#auth-screen{display:none}
+#app{display:block;min-height:100vh}
 .sidebar{width:220px;min-height:100vh;background:var(--card);border-right:1px solid var(--bdr);position:fixed;top:0;left:0;display:flex;flex-direction:column;padding:24px 16px;z-index:100;overflow-y:auto}
 .main-content{margin-left:220px;min-height:100vh;padding:24px}
 .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;font-size:.88rem;color:var(--mut);transition:all .2s;margin-bottom:4px}
@@ -872,7 +872,25 @@ function bootApp(u){
   showPage('dashboard',document.querySelector('.nav-item'));
   setTimeout(initDragDrop,200);
 }
-(function(){const s=lsGet(LS_SES,null);if(s&&s.email)bootApp(s);})();
+(function(){
+  const demoUser={name:ADMIN,email:'chris@teampulse.com',role:'MANAGER'};
+  // Ensure demo user exists in users store
+  const users=lsGet(LS_USERS,[]);
+  if(!users.find(u=>u.email===demoUser.email)){
+    users.push({...demoUser,pass:'admin123'});lsSet(LS_USERS,users);
+  }
+  // Pre-load demo audits if none exist yet
+  const existing=lsGet(auditKey(demoUser.email),[]);
+  if(!existing.length){
+    // Need emps first — localEmps not set yet, so load from storage or base
+    const storedEmps=lsGet(empKey(demoUser.email),null);
+    localEmps=storedEmps?storedEmps:[...BASE_EMPS];
+    const demos=buildDemoDataset();
+    lsSet(auditKey(demoUser.email),demos);
+  }
+  lsSet(LS_SES,demoUser);
+  bootApp(demoUser);
+})();
 
 const LS_LAYOUT='tpDashLayout';
 function initDragDrop(){
